@@ -1,0 +1,27 @@
+<div class="user-panel" *ngIf="isAuthenticated()">
+  <div class="user-info">
+    <div class="image-container" *ngIf="isAuthenticated()">
+      <div>
+        <img *ngIf="user?.avatarUrl != undefined" class="user-image" src="{{user?.avatarUrl}}" />
+        <div *ngIf="user?.avatarUrl == undefined" class="user-surname">{{user?.surname}}</div>
+      </div>
+    </div>
+    <div class="user-name" *ngIf="isAuthenticated()">{{user?.email}}</div>
+  </div>
+
+  <dx-context-menu *ngIf="menuMode === 'context' && isAuthenticated()"
+                     [items]="menuItems"
+                     target=".user-button"
+                     showEvent="dxclick"
+                     width="210px"
+                     [position]="{
+      my: 'top',
+      at: 'bottom'
+    }"
+                     cssClass="user-menu">
+  </dx-context-menu>
+  <dx-list *ngIf="menuMode === 'list' && isAuthenticated()"
+            class="dx-toolbar-menu-action"
+            [items]="menuItems">
+  </dx-list>
+</div>

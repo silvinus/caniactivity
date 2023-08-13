@@ -1,0 +1,7 @@
+:host {
+  @import "../themes/generated/variables.base.scss";
+  background-color: lighten($base-accent, 30.00);
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
