@@ -1,0 +1,7 @@
+*/obj
+*/bin
+*/.vs
+*.csproj.user
+*.esproj.user
+*.db
+.vs

@@ -1,0 +1,23 @@
+//{
+//  "items": [],
+//  "baseTheme": "material.blue.light",
+//  "assetsBasePath": "../../../node_modules/devextreme/dist/css/",
+//  "outputColorScheme": "base",
+//  "base": true
+//}
+{
+  "items": [
+    {
+      "key": "$base-bg",
+      "value": "rgba(99, 224, 255, 1)"
+    }
+  ],
+  "baseTheme": "material.blue.light",
+  "assetsBasePath": "../../../node_modules/devextreme/dist/css/",
+  "outputColorScheme": "base",
+  "base": true,
+  "makeSwatch": false,
+  "version": "23.1.4",
+  "widgets": [],
+  "removeExternalResources": false
+}
