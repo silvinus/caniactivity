@@ -20,8 +20,10 @@ export class UserPanelComponent {
 
   @Input()
   user!: IUser | null;
+  userDeser: string = "";
 
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {
+  }
 
   isAuthenticated() {
     return this.authService.loggedIn;

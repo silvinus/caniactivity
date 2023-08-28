@@ -9,6 +9,9 @@ using System.Text;
 using Caniactivity.Backend.JwtFeatures;
 using AutoMapper.Internal;
 using Caniactivity.Backend.Mapper;
+using Caniactivity.Backend.Database.Repositories;
+using Microsoft.Extensions.Logging.Configuration;
+using Caniactivity.Controllers;
 
 namespace Caniactivity
 {
@@ -57,26 +60,29 @@ namespace Caniactivity
                 opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-                .AddJwtBearer(options =>
+            .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
+                    ValidateIssuerSigningKey = false,
                     ValidIssuer = jwtSettings["validIssuer"],
                     ValidAudience = jwtSettings["validAudience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-                        .GetBytes(jwtSettings.GetSection("securityKey").Value))
+                        .GetBytes(JwtHandler.SECURITY_KEY)) // .GetSection("securityKey").Value
                 };
             })
-                .AddGoogle(googleOptions =>
-                {
-                    googleOptions.ClientId = config["Authentication:Google:ClientId"];
-                    googleOptions.ClientSecret = config["Authentication:Google:ClientSecret"];
-                }); 
+            .AddGoogle(googleOptions =>
+            {
+                googleOptions.ClientId = config["Authentication:Google:ClientId"];
+                googleOptions.ClientSecret = config["Authentication:Google:ClientSecret"];
+            }); 
             builder.Services.AddScoped<JwtHandler>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IDogRepository, DogRepository>();
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
             #endregion
 

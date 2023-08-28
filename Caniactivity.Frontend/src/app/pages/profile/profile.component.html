@@ -1,17 +1,66 @@
-<h2 class="content-block">Profile</h2>
+<h2 class="content-block">Mon compte</h2>
 
-<div class="content-block dx-card responsive-paddings">
+<!-- <div class="content-block dx-card responsive-paddings">
   <div class="form-avatar">
     <img src="https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/{{employee.Picture}}"/>
   </div>
   <span>{{employee.Notes}}</span>
-</div>
+</div> -->
 
 <div class="content-block dx-card responsive-paddings">
-  <dx-form id="form"
-    [formData]="employee"
-    labelLocation="top"
-    [colCountByScreen]="colCountByScreen"
-  >
-  </dx-form>
+    <!-- <h5 class="content-block">Mes informations</h5> -->
+    <dx-form id="form"
+                [formData]="user"
+                labelLocation="top">
+        <!-- [colCountByScreen]="colCountByScreen" -->
+        <dxi-item itemType="group" [colCount]="2" caption="Mes Informations">
+            <dxi-item dataField="lastName">
+                <dxo-label template="Nom"></dxo-label>
+            </dxi-item>
+            <dxi-item dataField="firstName">
+                <dxo-label template="Prénom"></dxo-label>
+            </dxi-item>
+
+            <dxi-item dataField="email" [editorOptions]="nameEditorOptions">
+                <dxo-label template="Mél"></dxo-label>
+            </dxi-item>
+            <dxi-item dataField="phone">
+                <dxo-label template="Téléphone"></dxo-label>
+            </dxi-item>
+
+            <dxi-item dataField="status" [editorOptions]="nameEditorOptions">
+                <dxo-label template="Status"></dxo-label>
+            </dxi-item>
+            <dxi-item dataField="provider" [editorOptions]="nameEditorOptions">
+                <dxo-label template="Connecté via"></dxo-label>
+            </dxi-item>
+            <dxi-item itemType="button"
+                      horizontalAlignment="left"
+                      [buttonOptions]="buttonOptions">
+            </dxi-item>
+        </dxi-item>
+    </dx-form>
+</div>
+<div class="content-block dx-card responsive-paddings">
+    <dx-form id="form"
+             [formData]="user"
+             labelLocation="top">
+        <!-- [colCountByScreen]="colCountByScreen" -->
+        <dxi-item itemType="group" [colCount]="2" caption="Mes Chiens">
+            <dx-data-grid [dataSource]="dataSource"
+                          [remoteOperations]="true"
+                          [height]="600"
+                          [showBorders]="true">
+                <dxo-editing mode="row"
+                             [allowAdding]="true"
+                             [allowUpdating]="true"
+                             [allowDeleting]="true">
+                </dxo-editing>
+                <dxi-column dataField="name" caption="Nom">
+                </dxi-column>
+                <dxi-column dataField="breed" caption="Race">
+                </dxi-column>
+            </dx-data-grid>
+        </dxi-item>
+    </dx-form>
 </div>

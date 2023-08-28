@@ -1,11 +1,88 @@
 <h2 class="content-block">Schedule</h2>
 <div class="content-block">
-  <dx-scheduler timeZone="America/Los_Angeles"
-                [dataSource]="appointmentsData"
-                [views]="['day', 'week', 'workWeek', 'month']"
-                currentView="day"
-                [currentDate]="currentDate"
-                [startDayHour]="9"
-                [height]="600">
-  </dx-scheduler>
+    <dx-scheduler [dataSource]="appointmentsData"
+                  [views]="views"
+                  [currentView]="currentView"
+                  [firstDayOfWeek]="1"
+                  [startDayHour]="9"
+                  [endDayHour]="20"
+                  [currentDate]="currentDate"
+                  [showAllDayPanel]="false"
+                  dataCellTemplate="dataCellTemplate"
+                  timeCellTemplate="timeCellTemplate"
+                  appointmentTemplate="appointment-template"
+                  appointmentTooltipTemplate="tooltip-template"
+                  (onAppointmentFormOpening)="onAppointmentFormOpening($event)"
+                  (onAppointmentAdding)="onAppointmentAdding($event)"
+                  (onAppointmentUpdating)="onAppointmentUpdating($event)"
+                  (onOptionChanged)="onOptionChanged($event)"
+                  [height]="800">
+        <dxi-resource fieldExpr="status"
+                      label="Etat"
+                      [dataSource]="statuses"
+                      [useColorAsDefault]="true">
+        </dxi-resource>
+
+        <div *dxTemplate="let model of 'appointment-template'">
+            <div class="showtime-preview">
+                <div>{{ model.targetedAppointmentData.dogs.length }} chiens</div>
+            </div>
+        </div>
+
+        <div *dxTemplate="let model of 'tooltip-template'">
+            <div (click)="stopPropagation($event)">
+                <dx-box direction="row" width="100%">
+                    <dxi-item class="rect demo-dark" [ratio]="1"><div>{{ model.targetedAppointmentData.dogs.length }} chiens</div></dxi-item>
+                </dx-box>
+
+                <dx-box direction="row" width="100%">
+                    <dxi-item class="rect demo-dark" [ratio]="2">
+                        <ul>
+                            <li *ngFor="let dog of model.targetedAppointmentData.dogs">{{ dog.name }}</li>
+                        </ul>
+                    </dxi-item>
+                    <dxi-item class="rect demo-dark" [ratio]="1">
+                        <dx-box direction="column" width="100%">
+                            <dxi-item class="rect demo-dark" [ratio]="1">
+                                <dx-button icon="check"
+                                           (onClick)="validate($event, model.targetedAppointmentData)">
+                                </dx-button>
+                            </dxi-item>
+                            <dxi-item class="rect demo-dark" [ratio]="1">
+                                <dx-button icon="trash"
+                                           (onClick)="remove($event, model.targetedAppointmentData)">
+                                </dx-button>
+                            </dxi-item>
+                            <dxi-item class="rect demo-dark" [ratio]="1">
+                                <dx-button icon="edit"
+                                           (onClick)="edit($event, model.targetedAppointmentData)">
+                                </dx-button>
+                            </dxi-item>
+                        </dx-box>
+                    </dxi-item>
+                </dx-box>
+            </div>
+        </div>
+
+        <div *dxTemplate="let dataCell of 'dataCellTemplate'"
+             [ngClass]="{
+              'disable-date': isDisableDate(dataCell.startDate),
+              dinner:
+                !isDisableDate(dataCell.startDate) && isDinner(dataCell.startDate),
+              'dx-scheduler-date-table-cell-text': isMonthView()
+            }">
+            {{ isMonthView() ? dataCell.startDate.getDate() : "" }}
+        </div>
+
+        <div *dxTemplate="let dateCell of 'dateCellTemplate'"
+             [ngClass]="{ 'disable-date': isDisabledDateCell(dateCell.date) }">
+            {{ dateCell.text }}
+        </div>
+
+        <div *dxTemplate="let timeCell of 'timeCellTemplate'"
+             [ngClass]="{ dinner: isDinner(timeCell.date) }">
+            {{ timeCell.text }}
+            <div *ngIf="hasCoffeeCupIcon(timeCell.date)" class="cafe"></div>
+        </div>
+    </dx-scheduler>
 </div>

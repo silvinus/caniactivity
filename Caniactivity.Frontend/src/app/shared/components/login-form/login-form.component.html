@@ -36,27 +36,27 @@
       </dxi-item>-->
 
       <dxi-item>
-        <div class="link">
-          <!-- <script src="https://accounts.google.com/gsi/client?hl=fr" async defer></script> -->
-          <!--<div id="gbtn"></div>-->
-          <!-- <div id="g_id_onload"
-       data-client_id="525855556201-51in80imafjci7lkie1e8g671gbtbab0.apps.googleusercontent.com"
-       data-context="signin"
-       data-callback="handleCredentialResponse"
-       data-ux_mode="popup"
-       data-login_uri="https://localhost:4200/"
-       data-auto_prompt="false">
-  </div> -->
+          <div class="link">
+              <!-- <script src="https://accounts.google.com/gsi/client?hl=fr" async defer></script> -->
+              <!--<div id="gbtn"></div>-->
+              <!-- <div id="g_id_onload"
+         data-client_id="525855556201-51in80imafjci7lkie1e8g671gbtbab0.apps.googleusercontent.com"
+         data-context="signin"
+         data-callback="handleCredentialResponse"
+         data-ux_mode="popup"
+         data-login_uri="https://localhost:4200/"
+         data-auto_prompt="false">
+    </div> class="g_id_signin"-->
 
-          <div class="g_id_signin"
-               data-type="standard"
-               data-shape="rectangular"
-               data-theme="filled_blue"
-               data-text="signin_with"
-               data-size="large"
-               data-logo_alignment="left">
+              <div #gbutton id="gId"
+                   data-type="standard"
+                   data-shape="rectangular"
+                   data-theme="filled_blue"
+                   data-text="signin_with"
+                   data-size="large"
+                   data-logo_alignment="left">
+              </div>
           </div>
-        </div>
       </dxi-item>
 
       <ng-container *dxTemplate="let item of 'signInTemplate'">

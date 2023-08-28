@@ -1,14 +1,15 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { LoginFormComponent, ResetPasswordFormComponent, CreateAccountFormComponent, ChangePasswordFormComponent } from './shared/components';
-import { AuthGuardService } from './shared/services';
+import { AuthGuardService, JwtInterceptor } from './shared/services';
 import { HomeComponent } from './pages/home/home.component';
 import { ProfileComponent } from './pages/profile/profile.component';
-import { DxDataGridModule, DxFormModule, DxSchedulerModule } from 'devextreme-angular';
+import { DxBoxModule, DxButtonModule, DxDataGridModule, DxFormModule, DxSchedulerModule, DxTemplateModule } from 'devextreme-angular';
 import { EnvironmentComponent } from './pages/environment/environment.component';
 import { ActivitiesComponent } from './pages/activities/activities.component';
 import { ScheduleComponent } from './pages/schedule/schedule.component';
-import { BrowserTransferStateModule } from '@angular/platform-browser';
+import { BrowserModule, BrowserTransferStateModule } from '@angular/platform-browser';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
 const routes: Routes = [
   {
@@ -67,10 +68,15 @@ const routes: Routes = [
     RouterModule.forRoot(routes, { useHash: true }),
     DxDataGridModule,
     DxFormModule,
-    BrowserTransferStateModule,
-    DxSchedulerModule
+    DxBoxModule,
+    DxButtonModule,
+    BrowserModule,
+    DxSchedulerModule,
+    DxTemplateModule
   ],
-  providers: [AuthGuardService],
+  providers: [
+    AuthGuardService,
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }],
   exports: [RouterModule],
   declarations: [
     HomeComponent,

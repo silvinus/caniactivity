@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
-import { HttpClient } from '@angular/common/http'
+import { HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http'
 import { AppInfoService } from './app-info.service';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, Observable, Subscriber } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface IUser {
+  id: string;
   email: string;
   surname?: string;
   avatarUrl?: string;
@@ -16,8 +18,38 @@ const defaultPath = '/';
 export class AuthService {
   private _user: IUser | null = null;
   private _displayLogin: boolean = false;
+  private _lastAuthenticatedPath: string = defaultPath;
+  private $user: Observable<IUser> | undefined;
+  private $userSubscriber: Subscriber<IUser> | undefined;
+
+  constructor(private router: Router, private httpClient: HttpClient, private infoService: AppInfoService) {
+    this.$user = new Observable((observer) => {
+      this.$userSubscriber = observer;
+      this.httpClient.post<LoggedUser>(`${environment.apiUrl}/api/accounts/reconnect`, {
+        credential: localStorage.getItem("token"),
+        provider: parseInt(localStorage.getItem("provider") || "999")
+      })
+        .pipe(
+          catchError(e => {
+            if (!this.displayLoginForm) {
+              this.logOut();
+            }
+            throw e;
+          })
+        ).subscribe(u => observer.next(this.toIUser(u)));
+    })
+  }
+
   get loggedIn(): boolean {
-    return !!this._user;
+    return localStorage.getItem("token") != null; // !!this._user;
+  }
+
+  get user(): Observable<IUser> | undefined {
+    return this.$user;
+  }
+
+  get userEmail(): string | undefined {
+    return this._user?.email;
   }
 
   get displayLoginForm(): boolean {
@@ -31,18 +63,22 @@ export class AuthService {
     return isAuthForm;
   }
 
-  private _lastAuthenticatedPath: string = defaultPath;
+  toIUser(loggedUser: LoggedUser) {
+    return {
+      id: loggedUser.user.id,
+      email: loggedUser.user.email,
+      avatarUrl: loggedUser.user.avatarUrl,
+      surname: (loggedUser.user.firstName.substring(0, 1) + loggedUser.user.lastName.substring(0, 1)).toUpperCase()
+    }
+  }
 
   set lastAuthenticatedPath(value: string) {
     this._lastAuthenticatedPath = value;
   }
 
-  constructor(private router: Router, private httpClient: HttpClient, private infoService: AppInfoService) { }
-
   async logIn(emailCredential: string, password: string) {
-
     try {
-      let result = await firstValueFrom(this.httpClient.post<LoggedUser>(`${this.infoService.backendUrl}/api/accounts`, {
+      let result = await firstValueFrom(this.httpClient.post<LoggedUser>(`${environment.apiUrl}/api/accounts`, {
         email: emailCredential,
         password: password
       }));
@@ -54,11 +90,8 @@ export class AuthService {
         };
       }
 
-      this._user = {
-        email: result.user.email,
-        avatarUrl: result.user.avatarUrl,
-        surname: (result.user.firstName.substring(0, 1) + result.user.lastName.substring(0, 1)).toUpperCase()
-      }
+      this._user = this.toIUser(result);
+      this.$userSubscriber?.next(this._user);
       this.setToken(result.token, 0);
       this.router.navigate([this._lastAuthenticatedPath]);
 
@@ -76,35 +109,36 @@ export class AuthService {
   }
 
   async logInWithGoogle(response: any) {
-    let validated = await firstValueFrom(this.httpClient.post<LoggedUser>(`${this.infoService.backendUrl}/api/accounts/validate`, {
+    let validated = await firstValueFrom(this.httpClient.post<LoggedUser>(`${environment.apiUrl}/api/accounts/validate`, {
       credential: response.credential,
       provider: 1
     }));
 
-    this._user = {
-      email: validated.user.email,
-      avatarUrl: validated.user.avatarUrl,
-      surname: (validated.user.firstName.substring(0, 1) + validated.user.lastName.substring(0, 1)).toUpperCase()
-    }
+    this._user = this.toIUser(validated)
+    this.$userSubscriber?.next(this._user);
     this.setToken(validated.token, 1);
     this.router.navigate([this._lastAuthenticatedPath]);
   }
 
+  async getUserInfo() {
+    if (this.$user == undefined) return;
+
+    let logged = await firstValueFrom(this.$user)
+
+    return await firstValueFrom(
+      this.httpClient.post<any>(`${environment.apiUrl}/api/user/userinfo`, {
+        email: logged.email
+      })
+    );
+  }
+
   async getUser() {
     try {
-      if (localStorage.getItem("token") == null) return { isOk: false, data: null };
+      if (this.$user == undefined) return { isOk: false, data: null }
 
+      let reconnected = await firstValueFrom(this.$user);
 
-      let reconnected = await firstValueFrom(this.httpClient.post<LoggedUser>(`${this.infoService.backendUrl}/api/accounts/reconnect`, {
-        credential: localStorage.getItem("token"),
-        provider: parseInt(localStorage.getItem("provider") || "999")
-      }));
-
-      this._user = {
-        email: reconnected.user.email,
-        avatarUrl: reconnected.user.avatarUrl,
-        surname: (reconnected.user.firstName.substring(0, 1) + reconnected.user.lastName.substring(0, 1)).toUpperCase()
-      }
+      this._user = reconnected;
 
       return {
         isOk: true,
@@ -112,6 +146,7 @@ export class AuthService {
       };
     }
     catch {
+      this.logOut();
       return {
         isOk: false,
         data: null
@@ -172,6 +207,7 @@ export class AuthService {
     this._user = null;
     localStorage.removeItem('token');
     localStorage.removeItem('provider');
+    this.router.navigate([defaultPath]);
   }
 
   setToken(token: string, provider: number) {
@@ -181,6 +217,7 @@ export class AuthService {
 }
 
 class User {
+  public id: string = "";
   public email: string = "";
   public firstName: string = "";
   public lastName: string = "";
@@ -224,5 +261,24 @@ export class AuthGuardService implements CanActivate {
     }
 
     return isLoggedIn || isAuthForm || isPublicPage;
+  }
+}
+
+@Injectable()
+export class JwtInterceptor implements HttpInterceptor {
+  constructor(private authService: AuthService) { }
+
+  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // add auth header with jwt if account is logged in and request is to the api url
+    //const account = this.accountService.accountValue;
+    //const isLoggedIn = account?.token;
+    //const isApiUrl = request.url.startsWith(environment.apiUrl);
+    if (this.authService.loggedIn) {
+      request = request.clone({
+        setHeaders: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+    }
+
+    return next.handle(request);
   }
 }

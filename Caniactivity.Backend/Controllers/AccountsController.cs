@@ -4,9 +4,6 @@ using Caniactivity.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
-using System.Text.Json;
 
 namespace Caniactivity.Controllers
 {
@@ -15,16 +12,14 @@ namespace Caniactivity.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly ILogger<AccountsController> _logger;
-        private readonly CaniActivityContext _context;
         private readonly UserManager<RegisteredUser> _userManager;
         private readonly IMapper _mapper;
         private readonly JwtHandler _jwtHandler;
 
-        public AccountsController(ILogger<AccountsController> logger, CaniActivityContext context, 
+        public AccountsController(ILogger<AccountsController> logger, 
             UserManager<RegisteredUser> userManager, IMapper mapper, JwtHandler jwtHandler)
         {
             _logger = logger;
-            _context = context;
             _userManager = userManager;
             _mapper = mapper;
             _jwtHandler = jwtHandler;
@@ -82,13 +77,14 @@ namespace Caniactivity.Controllers
                     user = await _userManager.FindByEmailAsync(payload.Email);
                     if (user == null)
                     {
-                        user = new RegisteredUser { 
-                            Email = payload.Email, 
+                        user = new RegisteredUser {
+                            Email = payload.Email,
                             UserName = payload.Email,
                             FirstName = payload.GivenName,
                             LastName = payload.FamilyName,
                             AvatarUrl = payload.Picture,
-                            Status = RegisteredUserStatus.Submitted
+                            Status = RegisteredUserStatus.Submitted,
+                            Provider = SSOProvider.Google
                         };
                         await _userManager.CreateAsync(user);
                         //await _userManager.AddToRoleAsync(user, "Viewer");
@@ -109,6 +105,7 @@ namespace Caniactivity.Controllers
                     Token = token,
                     IsAuthSuccessful = true, 
                     User = new UserDto { 
+                        Id = user.Id,
                         Email = user.Email, 
                         FirstName = user.FirstName, 
                         LastName = user.LastName,
@@ -124,7 +121,18 @@ namespace Caniactivity.Controllers
         {
             var claim = _jwtHandler.ValidateToken(reconnectToken.Credential);
             var user = await _userManager.FindByNameAsync(claim.Claims.First(claim => claim.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name").Value);
-            return Ok(new AuthResponseDto { IsAuthSuccessful = true, Token = reconnectToken.Credential, User = new UserDto { Email = user.Email, FirstName = user.FirstName, LastName = user.LastName } });
+            return Ok(new AuthResponseDto { 
+                IsAuthSuccessful = true, 
+                Token = reconnectToken.Credential, 
+                User = new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email, 
+                    FirstName = user.FirstName, 
+                    LastName = user.LastName,
+                    AvatarUrl = user.AvatarUrl
+                } }
+            );
         }
     }
 
@@ -146,6 +154,7 @@ namespace Caniactivity.Controllers
 
     public class UserDto
     {
+        public string? Id { get; set; }
         public string? Email { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }

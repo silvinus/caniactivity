@@ -11,14 +11,49 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Caniactivity.Sqlite.Migrations
 {
     [DbContext(typeof(CaniActivityContext))]
-    [Migration("20230804211354_v0.0.1_improve_user_for_sso")]
-    partial class v001_improve_user_for_sso
+    [Migration("20230816220154_v0.0.2_add_appointment")]
+    partial class v002_add_appointment
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.9");
+
+            modelBuilder.Entity("AppointmentDog", b =>
+                {
+                    b.Property<Guid>("AppointmentsId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DogsId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("AppointmentsId", "DogsId");
+
+                    b.HasIndex("DogsId");
+
+                    b.ToTable("AppointmentDog");
+                });
+
+            modelBuilder.Entity("Caniactivity.Models.Appointment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Appointments");
+                });
 
             modelBuilder.Entity("Caniactivity.Models.Dog", b =>
                 {
@@ -256,6 +291,21 @@ namespace Caniactivity.Sqlite.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("AppointmentDog", b =>
+                {
+                    b.HasOne("Caniactivity.Models.Appointment", null)
+                        .WithMany()
+                        .HasForeignKey("AppointmentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Caniactivity.Models.Dog", null)
+                        .WithMany()
+                        .HasForeignKey("DogsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Caniactivity.Models.Dog", b =>

@@ -6,3 +6,4 @@
 *.db
 .vs
 *.targets
+*.db-*

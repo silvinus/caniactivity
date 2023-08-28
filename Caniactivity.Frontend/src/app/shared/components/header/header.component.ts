@@ -23,10 +23,10 @@ export class HeaderComponent implements OnInit {
   @Input()
   title!: string;
 
-  user: IUser | null = { email: '' };
+  user: IUser | null = { email: '', id: '' };
 
   userMenuItems = [{
-    text: 'Profile',
+    text: 'Mon compte',
     icon: 'user',
     onClick: () => {
       this.router.navigate(['/profile']);
@@ -42,8 +42,9 @@ export class HeaderComponent implements OnInit {
 
   constructor(private authService: AuthService, private router: Router) { }
 
-  ngOnInit() {
-    this.authService.getUser().then((e) => this.user = e.data);
+  async ngOnInit() {
+    this.authService.user
+      ?.subscribe(user => this.user = user);
   }
 
   isAuthenticated() {

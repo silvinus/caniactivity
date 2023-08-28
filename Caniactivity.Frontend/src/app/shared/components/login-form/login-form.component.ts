@@ -1,7 +1,7 @@
 declare var google: any;
 
 import { CommonModule } from '@angular/common';
-import { AfterViewChecked, Component, NgModule } from '@angular/core';
+import { AfterViewChecked, AfterViewInit, Component, ElementRef, NgModule, OnInit, ViewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { DxFormModule } from 'devextreme-angular/ui/form';
 import { DxLoadIndicatorModule } from 'devextreme-angular/ui/load-indicator';
@@ -15,30 +15,35 @@ import { AuthService } from '../../services';
   templateUrl: './login-form.component.html',
   styleUrls: ['./login-form.component.scss']
 })
-export class LoginFormComponent implements AfterViewChecked {
+export class LoginFormComponent implements AfterViewInit {
+  @ViewChild('gbutton') gbutton: ElementRef = new ElementRef({});
   loading = false;
   initialized = false;
   formData: any = {};
 
   constructor(private authService: AuthService, private router: Router) {
-    (window as any).handleCredentialResponse = (response: any) => this.authService.logInWithGoogle(response)
+    //const gAccounts: accounts = google.accounts;
+    //gAccounts.id.initialize({
+    //  client_id: '525855556201-51in80imafjci7lkie1e8g671gbtbab0.apps.googleusercontent.com',
+    //  ux_mode: 'popup',
+    //  cancel_on_tap_outside: true,
+    //  callback: (window as any).handleCredentialResponse
+    //});
+    //google.accounts.id.prompt();
+    this.initialized = true;
   }
-  ngAfterViewChecked(): void {
-    if (!this.initialized) {
-      const gAccounts: accounts = google.accounts;
-      gAccounts.id.initialize({
-        client_id: '525855556201-51in80imafjci7lkie1e8g671gbtbab0.apps.googleusercontent.com',
-        ux_mode: 'popup',
-        cancel_on_tap_outside: true,
-        callback: (window as any).handleCredentialResponse
-      });
-      //google.accounts.id.prompt();
-      gAccounts.id.renderButton(document.getElementById('g_id_signin') as HTMLElement, {
+  ngAfterViewInit(): void {
+    //setTimeout(() => {
+    google.accounts.id.renderButton(this.gbutton.nativeElement, {
         size: 'large',
-        width: 280,
+        class: 'g_id_signin',
+        type: 'standard',
+        shape: 'rectangular',
+        theme: 'filled-blue',
+        logo_alignement: 'left',
+        width: 250,
       });
-      this.initialized = true;
-    }
+    //}, 10);
   }
 
   async onSubmit(e: Event) {

@@ -13,6 +13,8 @@ public class CaniActivityContext: IdentityDbContext<RegisteredUser>
     }
 
     public DbSet<RegisteredUser> RegisteredUsers { get; set; }
+    public DbSet<Dog> Dog { get; set; }
+    public DbSet<Appointment> Appointments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,7 +33,7 @@ public class CaniActivityContext: IdentityDbContext<RegisteredUser>
             .Rules((f, r) => r.LastName = f.Name.LastName())
             .Rules((f, r) => r.Email = f.Person.Email)
             .Rules((f, r) => r.UserName = r.Email)
-            .Rules((f, r) => r.NormalizedUserName = r.UserName.ToUpperInvariant())
+            .Rules((f, r) => r.NormalizedUserName = r.UserName?.ToUpperInvariant())
             .Rules((f, r) => r.Phone = f.Phone.PhoneNumber())
             .RuleFor(r => r.Dogs, (f, r) => f.Make(f.Random.Number(1, 3), () => new Dog()
             {
@@ -49,6 +51,11 @@ public class CaniActivityContext: IdentityDbContext<RegisteredUser>
 
 public class RegisteredUser: IdentityUser
 {
+    public RegisteredUser()
+    {
+        this.Id = Guid.NewGuid().ToString();
+    }
+
     public string FirstName { get; set; } = "";
     public string LastName { get; set; } = "";
     public string Phone { get; set; } = "";
@@ -60,10 +67,30 @@ public class RegisteredUser: IdentityUser
 
 public class Dog
 {
+    public Dog()
+    {
+        this.Id = Guid.NewGuid();
+    }
+
     public Guid Id { get; set; }
     public string Name { get; set; } = "";
     public string Breed { get; set; } = "";
     public RegisteredUser? Handler { get; set; }
+    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+}
+
+public class Appointment
+{
+    public Appointment()
+    {
+        this.Id = Guid.NewGuid();
+    }
+
+    public Guid Id { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public ICollection<Dog> Dogs { get; set; } = new List<Dog>();
+    public RegisteredUserStatus Status { get; set; }
 }
 
 public enum SSOProvider
@@ -72,6 +99,13 @@ public enum SSOProvider
 }
 
 public enum RegisteredUserStatus
+{
+    Submitted,
+    Approved,
+    Rejected
+}
+
+public enum AppointmentStatus
 {
     Submitted,
     Approved,

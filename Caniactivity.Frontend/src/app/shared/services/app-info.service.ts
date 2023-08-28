@@ -11,8 +11,4 @@ export class AppInfoService {
   public get currentYear() {
     return new Date().getFullYear();
   }
-
-  public get backendUrl() {
-    return "https://localhost:7256";
-  }
 }

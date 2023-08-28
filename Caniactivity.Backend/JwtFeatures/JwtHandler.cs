@@ -13,13 +13,14 @@ namespace Caniactivity.Backend.JwtFeatures
         private readonly IConfiguration _configuration;
         private readonly IConfigurationSection _jwtSettings;
         private readonly IConfigurationSection _googleSettings;
-        private readonly string SECURITY_KEY = "000uVmTXj5EzRjlnqruWF78JQZMT";
+        public static readonly string SECURITY_KEY = "000uVmTXj5EzRjlnqruWF78JQZMT";
 
-        public JwtHandler(IConfiguration configuration)
+        public JwtHandler(IConfiguration configuration, ILogger<JwtHandler> logger)
         {
             _configuration = configuration;
             _jwtSettings = _configuration.GetSection("JwtSettings");
             _googleSettings = _configuration.GetSection("GoogleAuthSettings");
+            _logger = logger;
         }
         public SigningCredentials GetSigningCredentials()
         {

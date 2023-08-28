@@ -1,33 +1,41 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { AuthService, IUser } from '../../shared/services';
+import * as AspNetData from 'devextreme-aspnet-data-nojquery';
+import { environment } from '../../../environments/environment';
 
 @Component({
   templateUrl: 'profile.component.html',
   styleUrls: [ './profile.component.scss' ]
 })
 
-export class ProfileComponent {
-  employee: any;
-  colCountByScreen: object;
+export class ProfileComponent implements OnInit {
+  dataSource: any;
+  user: IUser | null = { email: '', id: '' };
+  nameEditorOptions: Object;
+  buttonOptions: any = {
+    text: 'Sauvegarder',
+    type: 'success',
+    useSubmitBehavior: true,
+  };
 
-  constructor() {
-    this.employee = {
-      ID: 7,
-      FirstName: 'Sandra',
-      LastName: 'Johnson',
-      Prefix: 'Mrs.',
-      Position: 'Controller',
-      Picture: 'images/employees/06.png',
-      BirthDate: new Date('1974/11/5'),
-      HireDate: new Date('2005/05/11'),
-      /* tslint:disable-next-line:max-line-length */
-      Notes: 'Sandra is a CPA and has been our controller since 2008. She loves to interact with staff so if you`ve not met her, be certain to say hi.\r\n\r\nSandra has 2 daughters both of whom are accomplished gymnasts.',
-      Address: '4600 N Virginia Rd.'
-    };
-    this.colCountByScreen = {
-      xs: 1,
-      sm: 2,
-      md: 3,
-      lg: 4
-    };
+  async ngOnInit() {
+    this.user = (await this.authService.getUserInfo());
+    this.dataSource = AspNetData.createStore({
+      key: 'id',
+      loadUrl: `${environment.apiUrl}/api/dog/${this.user?.id}`,
+      insertUrl: `${environment.apiUrl}/api/dog/${this.user?.id}`,
+      updateUrl: `${environment.apiUrl}/api/dog/${this.user?.id}`,
+      deleteUrl: `${environment.apiUrl}/api/dog/${this.user?.id}`,
+      onBeforeSend(method, ajaxOptions) {
+        //ajaxOptions.xhrFields = { withCredentials: true };
+        ajaxOptions.headers = {
+          "Authorization": `Bearer ${localStorage.getItem('token')}`
+        };
+      },
+    });
+  }
+
+  constructor(private authService: AuthService) {
+    this.nameEditorOptions = { disabled: true };
   }
 }
