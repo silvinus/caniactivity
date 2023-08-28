@@ -5,3 +5,4 @@
 *.esproj.user
 *.db
 .vs
+*.targets
