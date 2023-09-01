@@ -55,14 +55,19 @@ namespace Caniactivity.Controllers
             {
                 StartDate = DateTime.Parse(deserialized["startDate"].ToString() ?? ""),
                 EndDate = DateTime.Parse(deserialized["endDate"].ToString() ?? ""),
-                Status = RegisteredUserStatus.Submitted
+                Status = AppointmentStatus.Submitted
             };
 
             string? dogs = deserialized["dogs"].ToString();
             if (dogs is not null)
             {
                 (JsonConvert.DeserializeObject<List<string>>(dogs) ?? new List<string>())
-                    .ForEach(w => newAppointment.Dogs.Add(_dogRepository.GetById(Guid.Parse(w))));
+                    .ForEach(w => {
+                        Dog dog = _dogRepository.GetById(Guid.Parse(w));
+                        if (dog.Status != DogStatus.TestApproved) BadRequest($"Test de sociabilité obligatoire pour {dog.Name}");
+
+                        newAppointment.Dogs.Add(dog);
+                    });
             }
 
             if (!ModelState.IsValid)
@@ -97,8 +102,10 @@ namespace Caniactivity.Controllers
             if ((AppointmentStatus)Enum.Parse(typeof(AppointmentStatus), deserialized["status"].ToString()) == 
                 AppointmentStatus.Approved)
             {
-                appointment.Status = RegisteredUserStatus.Approved;
+                appointment.Status = AppointmentStatus.Approved;
             }
+            appointment.StartDate = (DateTime)deserialized["startDate"];
+            appointment.EndDate = (DateTime)deserialized["endDate"];
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

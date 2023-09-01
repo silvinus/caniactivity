@@ -20,7 +20,8 @@ namespace Caniactivity.Backend.Mapper
             CreateMap<Dog, DogResponse>()
                 .ForMember(u => u.Id, opt => opt.MapFrom(x => x.Id))
                 .ForMember(u => u.Name, opt => opt.MapFrom(x => x.Name))
-                .ForMember(u => u.Breed, opt => opt.MapFrom(x => x.Breed));
+                .ForMember(u => u.Breed, opt => opt.MapFrom(x => x.Breed))
+                .ForMember(u => u.Status, opt => opt.MapFrom(x => x.Status));
             //CreateMap<Appointment, AppointmentResponse>()
             //    .ForMember(u => u.Id, opt => opt.MapFrom(x => x.Id))
             //    .ForMember(u => u.StartDate, opt => opt.MapFrom(x => x.StartDate))

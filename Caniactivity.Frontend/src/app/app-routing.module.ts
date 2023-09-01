@@ -8,10 +8,28 @@ import { DxBoxModule, DxButtonModule, DxDataGridModule, DxFormModule, DxSchedule
 import { EnvironmentComponent } from './pages/environment/environment.component';
 import { ActivitiesComponent } from './pages/activities/activities.component';
 import { ScheduleComponent } from './pages/schedule/schedule.component';
-import { BrowserModule, BrowserTransferStateModule } from '@angular/platform-browser';
+import { BrowserModule } from '@angular/platform-browser';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { UsersComponent } from './pages/users/users.component';
+import { SchedulerAdminComponent } from './pages/scheduler-admin/scheduler-admin.component';
+import { TarifsComponent } from './pages/tarifs/tarifs.component';
 
 const routes: Routes = [
+  {
+    path: 'pages/tarifs',
+    component: TarifsComponent,
+    canActivate: [ AuthGuardService ]
+  },
+  {
+    path: 'pages/scheduler-admin',
+    component: SchedulerAdminComponent,
+    canActivate: [ AuthGuardService ]
+  },
+  {
+    path: 'pages/users',
+    component: UsersComponent,
+    canActivate: [ AuthGuardService ]
+  },
   {
     path: 'pages/schedule',
     component: ScheduleComponent,
@@ -83,7 +101,10 @@ const routes: Routes = [
     ProfileComponent,
     EnvironmentComponent,
     ActivitiesComponent,
-    ScheduleComponent
+    ScheduleComponent,
+    UsersComponent,
+    SchedulerAdminComponent,
+    TarifsComponent
   ]
 })
 export class AppRoutingModule { }

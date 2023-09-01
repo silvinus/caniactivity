@@ -83,7 +83,7 @@ export class ScheduleComponent {
     const that = this;
     const form = e.form;
     form.option('items', []);
-    let dogs = await that.userService.getDogs() || [];
+    let dogs = await that.userService.getValidateDogs() || [];
 
     form.option('labelMode', 'static');
     form.option('items', [
@@ -127,7 +127,7 @@ export class ScheduleComponent {
           width: '100%',
           type: 'datetime',
           onValueChanged(args: any) {
-            startDate = args.value;
+            startDate = new Date(args.value);
             let range = form.getEditor("rangeHour").option("value");
             if (range == 1) {
               form.updateData('endDate', new Date(startDate.getTime() + 30 * 60 * 1000));
@@ -162,10 +162,10 @@ export class ScheduleComponent {
           items: [{ id: 1, label: "30 minutes" }, { id: 2, label: "1 heure" }],
           displayExpr: 'label',
           valueExpr: 'id',
-          value: 1,
+          value: new Date(e.appointmentData.endDate).getTime() - startDate.getTime() == 1800000 ? 1 : 2,
           layout: 'horizontal',
           onValueChanged(args: any) {
-            startDate = form.getEditor("startDate").option("value");
+            startDate = new Date(form.getEditor("startDate").option("value"));
             if (args.value == 1) {
               form.updateData('endDate', new Date(startDate.getTime() + 30 * 60 * 1000));
             }

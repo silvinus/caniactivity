@@ -1,6 +1,9 @@
 using AutoMapper;
+using Caniactivity.Backend.Database.Repositories;
 using Caniactivity.Backend.JwtFeatures;
 using Caniactivity.Models;
+using Duende.IdentityServer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -13,16 +16,19 @@ namespace Caniactivity.Controllers
     {
         private readonly ILogger<AccountsController> _logger;
         private readonly UserManager<RegisteredUser> _userManager;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
         private readonly JwtHandler _jwtHandler;
 
-        public AccountsController(ILogger<AccountsController> logger, 
-            UserManager<RegisteredUser> userManager, IMapper mapper, JwtHandler jwtHandler)
+        public AccountsController(ILogger<AccountsController> logger,
+            UserManager<RegisteredUser> userManager, IMapper mapper, JwtHandler jwtHandler,
+            IUserRepository userRepository)
         {
             _logger = logger;
             _userManager = userManager;
             _mapper = mapper;
             _jwtHandler = jwtHandler;
+            _userRepository = userRepository;
         }
 
         [HttpPost(Name = "PostLogin")]
@@ -34,7 +40,19 @@ namespace Caniactivity.Controllers
                 return Unauthorized(new AuthResponseDto { ErrorMessage = "Invalid Authentication" });
 
             var token = _jwtHandler.GenerateToken(user);
-            return Ok(new AuthResponseDto { IsAuthSuccessful = true, Token = token, User = new UserDto { Email = user.Email, FirstName = user.FirstName, LastName = user.LastName } });
+            string refreshToken = _jwtHandler.GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+            _userRepository.Update(user);
+            _userRepository.Save();
+
+            return Ok(new AuthResponseDto {
+                IsAuthSuccessful = true,
+                Token = token,
+                RefreshToken = refreshToken,
+                User = new UserDto { Email = user.Email, FirstName = user.FirstName, LastName = user.LastName }
+            });
         }
 
         [HttpPost("Registration")]
@@ -100,9 +118,16 @@ namespace Caniactivity.Controllers
                     return BadRequest("Invalid External Authentication.");
 
                 //check for the Locked out account
-                var token = _jwtHandler.GenerateToken(user);
+                var token = _jwtHandler.GenerateToken(user); string refreshToken = _jwtHandler.GenerateRefreshToken();
+
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+                _userRepository.Update(user);
+                _userRepository.Save();
+
                 return Ok(new AuthResponseDto { 
                     Token = token,
+                    RefreshToken = refreshToken,
                     IsAuthSuccessful = true, 
                     User = new UserDto { 
                         Id = user.Id,
@@ -134,6 +159,48 @@ namespace Caniactivity.Controllers
                 } }
             );
         }
+
+        [HttpPost]
+        [Route("refresh")]
+        public IActionResult Refresh(TokenRequestDto tokenApiModel)
+        {
+            if (tokenApiModel is null)
+                return BadRequest("Invalid client request");
+            string accessToken = tokenApiModel.AccessToken;
+            string refreshToken = tokenApiModel.RefreshToken;
+            var principal = _jwtHandler.ValidateToken(accessToken);
+
+            var username = principal.Identity.Name; //this is mapped to the Name claim by default
+            var user = _userRepository.GetByEmail(username);
+            if (user is null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+                return BadRequest("Invalid client request");
+
+            var newAccessToken = _jwtHandler.GenerateToken(user);
+            var newRefreshToken = _jwtHandler.GenerateRefreshToken();
+            user.RefreshToken = newRefreshToken;
+            _userRepository.Update(user);
+            _userRepository.Save();
+
+            return Ok(new TokenResponseDto()
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
+            });
+        }
+
+        [HttpPost, Authorize]
+        [Route("revoke")]
+        public IActionResult Revoke()
+        {
+            var username = User.Identity.Name;
+            var user = _userRepository.GetByEmail(username);
+            if (user == null) return BadRequest();
+
+            _userRepository.Update(user);
+            _userRepository.Save();
+
+            return NoContent();
+        }
     }
 
     public class LoginCredentialDto
@@ -150,6 +217,7 @@ namespace Caniactivity.Controllers
         public UserDto? User { get; set; }
         public string? ErrorMessage { get; set; }
         public string? Token { get; set; }
+        public string? RefreshToken { get; set; }
     }
 
     public class UserDto
@@ -186,5 +254,19 @@ namespace Caniactivity.Controllers
     {
         public string Credential { get; set; }
         public SSOProvider Provider { get; set; }
+    }
+
+    public class TokenRequestDto
+    {
+        [Required]
+        public string AccessToken { get; set; } = "";
+        [Required]
+        public string RefreshToken { get; set; } = "";
+    }
+
+    public class TokenResponseDto
+    {
+        public string AccessToken { get; set; } = "";
+        public string RefreshToken { get; set; } = "";
     }
 }

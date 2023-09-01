@@ -60,7 +60,7 @@ namespace Caniactivity.Controllers
             return Ok(_mapper.Map<DogResponse>(newDog));
         }
 
-        [HttpPut("{handlerId}", Name = "AddDog")]
+        [HttpPut("{handlerId}", Name = "UpdateDog")]
         [Authorize]
         public async Task<ObjectResult> Update(string handlerId)
         {
@@ -109,5 +109,6 @@ namespace Caniactivity.Controllers
         public Guid Id { get; set; }
         public string Name { get; set; } = "";
         public string Breed { get; set; } = "";
+        public DogStatus Status { get; set; } = DogStatus.TestStandBy;
     }
 }

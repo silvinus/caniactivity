@@ -1,4 +1,5 @@
 ﻿using Caniactivity.Models;
+using System.Diagnostics;
 using static Duende.IdentityServer.Models.IdentityResources;
 
 namespace Caniactivity.Backend.Database.Repositories
@@ -9,8 +10,8 @@ namespace Caniactivity.Backend.Database.Repositories
         RegisteredUser GetById(string EmployeeID);
         RegisteredUser GetByEmail(string email);
         //void Insert(Employee employee);
-        void Update(RegisteredUser employee);
-        void Delete(int EmployeeID);
+        void Update(RegisteredUser user);
+        void Delete(RegisteredUser user);
         void Save();
     }
 
@@ -23,9 +24,11 @@ namespace Caniactivity.Backend.Database.Repositories
             this.activityContext = activityContext;
         }
 
-        public void Delete(int UserId)
+        public void Delete(RegisteredUser user)
         {
-            throw new NotImplementedException();
+            activityContext.Dog.Where(x => x.Handler.Equals(user))
+                .ToList().ForEach(w => activityContext.Dog.Remove(w));
+            activityContext.RegisteredUsers.Remove(user);
         }
 
         public IEnumerable<RegisteredUser> GetAll() => activityContext.RegisteredUsers.ToList();
@@ -41,7 +44,7 @@ namespace Caniactivity.Backend.Database.Repositories
 
         public void Update(RegisteredUser user)
         {
-            throw new NotImplementedException();
+            activityContext.RegisteredUsers.Update(user);
         }
     }
 }

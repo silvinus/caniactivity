@@ -63,6 +63,8 @@ public class RegisteredUser: IdentityUser
     public SSOProvider Provider { get; set; }
     public RegisteredUserStatus Status { get; set; }
     public ICollection<Dog> Dogs { get; set; } = new List<Dog>();
+    public string? RefreshToken { get; set; }
+    public DateTime RefreshTokenExpiryTime { get; set; }
 }
 
 public class Dog
@@ -77,6 +79,7 @@ public class Dog
     public string Breed { get; set; } = "";
     public RegisteredUser? Handler { get; set; }
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    public DogStatus Status { get; set; }
 }
 
 public class Appointment
@@ -90,7 +93,7 @@ public class Appointment
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public ICollection<Dog> Dogs { get; set; } = new List<Dog>();
-    public RegisteredUserStatus Status { get; set; }
+    public AppointmentStatus Status { get; set; }
 }
 
 public enum SSOProvider
@@ -110,4 +113,11 @@ public enum AppointmentStatus
     Submitted,
     Approved,
     Rejected
+}
+
+public enum DogStatus
+{
+    TestStandBy,
+    TestApproved,
+    TestRejected
 }

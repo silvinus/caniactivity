@@ -1,0 +1,40 @@
+<h2 class="content-block">Utilisateurs</h2>
+<div class="content-block">
+    <dx-data-grid [dataSource]="dataSource"
+                  [remoteOperations]="true"
+                  [height]="600"
+                  [showBorders]="true">
+        <dxo-filter-row [visible]="true"></dxo-filter-row>
+        <dxo-editing mode="row"
+                     [allowAdding]="true"
+                     [allowUpdating]="true"
+                     [allowDeleting]="true">
+        </dxo-editing>
+        <dxi-column [allowEditing]="false" dataField="email" caption="Email">
+        </dxi-column>
+        <dxi-column [allowEditing]="false" dataField="userName" caption="Nom d'utilisateur">
+        </dxi-column>
+        <dxi-column dataField="lastName" caption="Nom">
+        </dxi-column>
+        <dxi-column dataField="firstName" caption="Prénom">
+        </dxi-column>
+        <dxi-column dataField="phone" caption="Téléphone">
+        </dxi-column>
+        <dxi-column [allowEditing]="false" dataField="provider" caption="Provider">
+            <dxo-lookup [dataSource]="providers" valueExpr="id" displayExpr="name">
+            </dxo-lookup>
+        </dxi-column>
+        <dxi-column dataField="status" caption="Status">
+            <dxo-lookup [dataSource]="statuses" valueExpr="id" displayExpr="name">
+            </dxo-lookup>
+        </dxi-column>
+
+        <dxo-master-detail [enabled]="true" template="detail"></dxo-master-detail>
+        <div *dxTemplate="let user of 'detail'">
+            <div class="master-detail-caption">
+                Dogs
+            </div>
+            <profile-view [user]="user.data"></profile-view>
+        </div>
+    </dx-data-grid>
+</div>

@@ -28,10 +28,10 @@
                 <dxo-label template="Téléphone"></dxo-label>
             </dxi-item>
 
-            <dxi-item dataField="status" [editorOptions]="nameEditorOptions">
+            <dxi-item dataField="status" editorType="dxSelectBox" [editorOptions]="statusEditorOptions">
                 <dxo-label template="Status"></dxo-label>
             </dxi-item>
-            <dxi-item dataField="provider" [editorOptions]="nameEditorOptions">
+            <dxi-item dataField="provider" editorType="dxSelectBox" [editorOptions]="providerEditorOptions">
                 <dxo-label template="Connecté via"></dxo-label>
             </dxi-item>
             <dxi-item itemType="button"
@@ -59,6 +59,10 @@
                 <dxi-column dataField="name" caption="Nom">
                 </dxi-column>
                 <dxi-column dataField="breed" caption="Race">
+                </dxi-column>
+                <dxi-column dataField="status" caption="Status" [editorOptions]="dogEditorOptions">
+                    <dxo-lookup [dataSource]="dogStatuses" valueExpr="id" displayExpr="name">
+                    </dxo-lookup>
                 </dxi-column>
             </dx-data-grid>
         </dxi-item>

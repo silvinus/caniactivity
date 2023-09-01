@@ -4,6 +4,7 @@ import { HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from
 import { AppInfoService } from './app-info.service';
 import { catchError, firstValueFrom, Observable, Subscriber } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { Token } from '@angular/compiler';
 
 export interface IUser {
   id: string;
@@ -92,7 +93,7 @@ export class AuthService {
 
       this._user = this.toIUser(result);
       this.$userSubscriber?.next(this._user);
-      this.setToken(result.token, 0);
+      this.setToken(result.token, result.refreshToken, 0);
       this.router.navigate([this._lastAuthenticatedPath]);
 
       return {
@@ -116,7 +117,7 @@ export class AuthService {
 
     this._user = this.toIUser(validated)
     this.$userSubscriber?.next(this._user);
-    this.setToken(validated.token, 1);
+    this.setToken(validated.token, validated.refreshToken, 1);
     this.router.navigate([this._lastAuthenticatedPath]);
   }
 
@@ -206,12 +207,37 @@ export class AuthService {
   async logOut() {
     this._user = null;
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('provider');
+    // TODO revoke
     this.router.navigate([defaultPath]);
   }
 
-  setToken(token: string, provider: number) {
+  async tryRefreshingTokens(token: string | null): Promise<boolean> {
+    const refreshToken: string | null = localStorage.getItem("refreshToken");
+    if (!token || !refreshToken) {
+      return false;
+    }
+
+    const credentials = JSON.stringify({ accessToken: token, refreshToken: refreshToken });
+
+    try {
+      let tokens = await firstValueFrom(
+        this.httpClient.post<RefreshedToken>(`${environment.apiUrl}/api/accounts/refresh`, credentials)
+      );
+      this.setToken(tokens.accessToken, tokens.refreshToken, Number.parseInt(localStorage.getItem("Provider") || "999"));
+      return true;
+    }
+    catch (e) {
+      console.error(e);
+      this.logOut();
+      return false;
+    }
+  }
+
+  setToken(token: string, refershToken: string, provider: number) {
     localStorage.setItem('token', token);
+    localStorage.setItem('refreshToken', refershToken);
     localStorage.setItem('provider', provider.toString());
   }
 }
@@ -228,13 +254,24 @@ class LoggedUser {
   public isAuthSuccessful: boolean = false;
   public user: User = new User();
   public token: string = "";
+  public refreshToken: string = "";
+}
+
+class RefreshedToken {
+  public accessToken: string = "";
+  public refreshToken: string = "";
 }
 
 @Injectable()
 export class AuthGuardService implements CanActivate {
   constructor(private router: Router, private authService: AuthService) { }
 
-  canActivate(route: ActivatedRouteSnapshot): boolean {
+  private isTokenExpired(token: string) {
+    const expiry = (JSON.parse(atob(token.split('.')[1]))).exp;
+    return (Math.floor((new Date).getTime() / 1000)) >= expiry;
+  }
+
+  async canActivate(route: ActivatedRouteSnapshot): Promise<boolean> {
     const isLoggedIn = this.authService.loggedIn;
     const isAuthForm = [
       'login-form',
@@ -243,7 +280,7 @@ export class AuthGuardService implements CanActivate {
       'change-password/:recoveryCode'
     ].includes(route.routeConfig?.path || defaultPath);
     const isPublicPage = [
-      'home', 'pages/activities', 'pages/environment'
+      'home', 'pages/activities', 'pages/environment', 'pages/tarifs'
     ].includes(route.routeConfig?.path || defaultPath);
 
     if (isLoggedIn && isAuthForm) {
@@ -260,6 +297,14 @@ export class AuthGuardService implements CanActivate {
       this.authService.lastAuthenticatedPath = route.routeConfig?.path || defaultPath;
     }
 
+    let token = localStorage.getItem("token");
+    if (token && this.isTokenExpired(token)) {
+      const isRefreshSuccess = await this.authService.tryRefreshingTokens(token);
+      if (!isRefreshSuccess && !isPublicPage) {
+        return false;
+      }
+    }
+
     return isLoggedIn || isAuthForm || isPublicPage;
   }
 }
@@ -269,13 +314,16 @@ export class JwtInterceptor implements HttpInterceptor {
   constructor(private authService: AuthService) { }
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // add auth header with jwt if account is logged in and request is to the api url
-    //const account = this.accountService.accountValue;
-    //const isLoggedIn = account?.token;
-    //const isApiUrl = request.url.startsWith(environment.apiUrl);
+    let contentType = {
+      "Content-type": request.headers.get("Content-type") || "application/json"
+    };
+
     if (this.authService.loggedIn) {
       request = request.clone({
-        setHeaders: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        setHeaders: {
+          ...contentType,
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
       });
     }
 

@@ -15,6 +15,10 @@ export const navigation = [
       {
         text: 'Les activités',
         path: '/pages/activities'
+      },
+      {
+        text: 'Tarifs',
+        path: '/pages/tarifs'
       }
     ]
   },
@@ -22,5 +26,19 @@ export const navigation = [
     text: 'Réservation',
     path: '/pages/schedule',
     icon: 'clock'
+  },
+  {
+    text: 'Administration',
+    icon: 'folder',
+    items: [
+      {
+        text: 'Users',
+        path: '/pages/users'
+      },
+      {
+        text: 'Scheduler Admin',
+        path: '/pages/scheduler-admin'
+      }
+    ]
   }
 ];

@@ -3,6 +3,7 @@ using System;
 using Caniactivity.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Caniactivity.Sqlite.Migrations
 {
     [DbContext(typeof(CaniActivityContext))]
-    partial class CaniActivityContextModelSnapshot : ModelSnapshot
+    [Migration("20230901131713_v0.0.4_add_refresh_token")]
+    partial class v004_add_refresh_token
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.9");

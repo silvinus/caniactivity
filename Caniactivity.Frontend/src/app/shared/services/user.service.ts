@@ -18,6 +18,13 @@ export class UserService {
     return await
       (await firstValueFrom(this.httpClient.get<DogData>(`${environment.apiUrl}/api/dog/${user.data?.id}`))).data;
   }
+
+  async getValidateDogs() {
+    let user = await this.authService.getUser();
+    let filter = '["status", "=", 1]'
+    return await
+      (await firstValueFrom(this.httpClient.get<DogData>(`${environment.apiUrl}/api/dog/${user.data?.id}?filter=${filter}`))).data;
+  }
 }
 
 export class DogData {

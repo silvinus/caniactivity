@@ -25,20 +25,22 @@
 
         <div *dxTemplate="let model of 'appointment-template'">
             <div class="showtime-preview">
-                <div>{{ model.targetedAppointmentData.dogs.length }} chiens</div>
+                <div *ngIf="model.targetedAppointmentData.status == 0">En attente de validation</div>
+                <div *ngIf="model.targetedAppointmentData.status == 1">Validé</div>
+                <div>{{ model.targetedAppointmentData.dogs.length }} chien(s)</div>
             </div>
         </div>
 
         <div *dxTemplate="let model of 'tooltip-template'">
             <div (click)="stopPropagation($event)">
                 <dx-box direction="row" width="100%">
-                    <dxi-item class="rect demo-dark" [ratio]="1"><div>{{ model.targetedAppointmentData.dogs.length }} chiens</div></dxi-item>
+                    <dxi-item class="rect demo-dark" [ratio]="1"><div>{{ model.targetedAppointmentData.dogs.length }} chien(s)</div></dxi-item>
                 </dx-box>
 
                 <dx-box direction="row" width="100%">
                     <dxi-item class="rect demo-dark" [ratio]="2">
                         <ul>
-                            <li *ngFor="let dog of model.targetedAppointmentData.dogs">{{ dog.name }}</li>
+                            <li *ngFor="let dog of model.targetedAppointmentData.dogs">{{ dog.name }} (<span *ngIf="dog.handler">{{ dog.handler.firstName }}</span>)</li>
                         </ul>
                     </dxi-item>
                     <dxi-item class="rect demo-dark" [ratio]="1">
