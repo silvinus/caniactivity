@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { AppointmentService, Dog } from '../../shared/services/appointment.service';
 import { Observable } from 'rxjs';
 import { DxSchedulerComponent } from 'devextreme-angular';
+import { AuthService } from '../../shared/services';
 
 @Component({
   selector: 'app-schedule',
@@ -18,6 +19,7 @@ export class ScheduleComponent {
   views = ['day', 'week', 'month'];
   currentView = this.views[1];
   cache: any = [];
+  isAdmin: boolean = false;
   @ViewChild(DxSchedulerComponent) scheduler: DxSchedulerComponent | undefined;
 
   statuses: any[] = [
@@ -33,7 +35,7 @@ export class ScheduleComponent {
 ];
 
 
-  constructor(private userService: UserService, private appointments: AppointmentService) {
+  constructor(private userService: UserService, private authService: AuthService) {
     this.appointmentsData = AspNetData.createStore({
       key: 'id',
       loadUrl: `${environment.apiUrl}/api/appointment`,
@@ -45,7 +47,11 @@ export class ScheduleComponent {
           "Authorization": `Bearer ${localStorage.getItem('token')}`
         };
       },
+      onAjaxError(e) {
+        notify(e.error, 'error', 2000);
+      }
     });
+    this.isAdmin = this.authService.roles == "Administrator";
   }
 
   async validate(e: any, appointement: any) {
@@ -53,17 +59,20 @@ export class ScheduleComponent {
     this.scheduler?.instance.hideAppointmentTooltip();
     this.scheduler?.instance.updateAppointment(appointement, { ...appointement, ...{ status: 1 }});
   }
+
   remove(e: any, appointement: any) {
     this.stopPropagation(e.event);
     this.scheduler?.instance.deleteAppointment(appointement);
     this.scheduler?.instance.hideAppointmentTooltip();
   }
+
   edit(e: any, appointement: any) {
     this.scheduler?.instance.showAppointmentPopup(
       appointement,
       false
     );
   }
+
   stopPropagation(e: any) {
     e.stopPropagation();
   }
@@ -72,6 +81,19 @@ export class ScheduleComponent {
     if (e.name === 'currentView') {
       this.currentView = e.value;
     }
+  }
+
+  canValidate() {
+    this.authService.roles == "Administrator";
+  }
+
+  canDelete(appointment: any) {
+    let currentUser = (this.authService.getUser()) || {};
+    let userIsAppointmentHandler = (currentUser.data || {}).id == appointment.registeredBy.id;
+    let isAdmin = this.authService.roles == "Administrator";
+    let isSubmitted = appointment.status == 0;
+
+    return isAdmin || (userIsAppointmentHandler && !appointment.hasMultipleMemberRegistered && isSubmitted);
   }
 
   async onAppointmentFormOpening(e: any) {
@@ -84,6 +106,15 @@ export class ScheduleComponent {
     const form = e.form;
     form.option('items', []);
     let dogs = await that.userService.getValidateDogs() || [];
+    // if another dog registered, can't update start and end date
+    let otherDogsExists = (e.appointmentData.dogs || []).map((x: any) => x.id).filter((x: any) => !dogs.map((y: any) => y.id).includes(x)).length > 0;
+    // if edition is do by another user than register
+    let currentUser = (that.authService.getUser()) || {};
+    let userIsAppointmentHandler = e.appointmentData.registeredBy == undefined || (currentUser.data || {}).id == e.appointmentData.registeredBy.id;
+    let isAdmin = this.authService.roles == "Administrator";
+    let isSubmitted = e.appointmentData.status == undefined || e.appointmentData.status == 0;
+
+    let canUpdateDate = isAdmin || (userIsAppointmentHandler && !otherDogsExists && isSubmitted);
 
     form.option('labelMode', 'static');
     form.option('items', [
@@ -124,6 +155,7 @@ export class ScheduleComponent {
         dataField: 'startDate',
         editorType: 'dxDateBox',
         editorOptions: {
+          disabled: !canUpdateDate,
           width: '100%',
           type: 'datetime',
           onValueChanged(args: any) {
@@ -159,6 +191,7 @@ export class ScheduleComponent {
         editorType: 'dxRadioGroup',
         colSpan: 2,
         editorOptions: {
+          disabled: !canUpdateDate,
           items: [{ id: 1, label: "30 minutes" }, { id: 2, label: "1 heure" }],
           displayExpr: 'label',
           valueExpr: 'id',
@@ -189,10 +222,22 @@ export class ScheduleComponent {
   }
 
   onAppointmentUpdating(e: any) {
+    let addHours = function (date: Date, h: number) {
+      date.setTime(date.getTime() + (h * 60 * 60 * 1000));
+      return date;
+    }
+
     const isValidAppointment = this.isValidAppointment(e.component, e.newData);
     if (!isValidAppointment) {
       e.cancel = true;
       this.notifyDisableDate();
+    }
+
+    let endDate = new Date(e.newData.endDate);
+    let startDate = new Date(e.newData.startDate);
+    let delta = (endDate.getTime() - startDate.getTime()) / 60000;
+    if (delta > 60) {
+      e.newData.endDate = addHours(startDate, 1).toISOString().replace(/:.\d.\d+Z$/g, "Z");
     }
   }
 
@@ -224,7 +269,7 @@ export class ScheduleComponent {
 
   isDinner(date: Date) {
     const hours = date.getHours();
-    const dinnerTime = { from: 12, to: 13 }; // this.dataService.getDinnerTime();
+    const dinnerTime = { from: 12, to: 14 }; // this.dataService.getDinnerTime();
     return hours >= dinnerTime.from && hours < dinnerTime.to;
   }
 

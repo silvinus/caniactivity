@@ -27,12 +27,6 @@ namespace Caniactivity.Controllers
             _mapper = mapper;
         }
 
-        //[HttpGet(Name = "registered")]
-        //public IEnumerable<RegisteredUser> Get()
-        //{
-        //    return _repository.GetAll();
-        //}
-
         [HttpPost("userInfo", Name = "userInfo")]
         [Authorize]
         public UserResponse UserInfo([FromBody] UserRequest request)
@@ -41,7 +35,7 @@ namespace Caniactivity.Controllers
         }
 
         [HttpGet(Name = "AllUsers")]
-        [Authorize]
+        [Authorize(Roles = UserRoles.Admin)]
         public LoadResult Get([ModelBinder(typeof(DataSourceLoadOptionsHttpBinder))] DataSourceLoadOptions loadOptions)
         {
             return
@@ -50,7 +44,7 @@ namespace Caniactivity.Controllers
         }
 
         [HttpPut(Name = "UpdateUser")]
-        [Authorize]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<ObjectResult> Update()
         {
             IFormCollection form = await Request.ReadFormAsync();
@@ -70,7 +64,7 @@ namespace Caniactivity.Controllers
         }
 
         [HttpDelete(Name = "DeleteUser")]
-        [Authorize]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<ObjectResult> Delete()
         {
             IFormCollection form = await Request.ReadFormAsync();

@@ -1,4 +1,5 @@
-﻿using Google.Apis.Auth;
+﻿using Caniactivity.Models;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,19 +11,26 @@ namespace Caniactivity.Backend.JwtFeatures
 {
     public class JwtHandler
     {
+        public static readonly string SECURITY_KEY_ENV_VAR_NAME = "JWT_SECURITY_KEY";
+        public static readonly string GOOGLE_API_KEY_ENV_VAR_NAME = "GOOGLE_API_KEY";
+        public static readonly string GOOGLE_CLIENT_SECRET_ENV_VAR_NAME = "GOOGLE_CLIENT_SECRET";
+        public static readonly string SECURITY_ALGORITHM = SecurityAlgorithms.HmacSha256;
+
         private readonly ILogger<JwtHandler> _logger;
         private readonly IConfiguration _configuration;
         private readonly IConfigurationSection _jwtSettings;
-        private readonly IConfigurationSection _googleSettings;
-        public static readonly string SECURITY_KEY = "000uVmTXj5EzRjlnqruWF78JQZMT";  // TODO get from env var
-        public static readonly string SECURITY_ALGORITHM = SecurityAlgorithms.HmacSha256;
+        // private readonly IConfigurationSection _googleSettings;
+        private readonly UserManager<RegisteredUser> _userManager;
+        private readonly string SECURITY_KEY = Environment.GetEnvironmentVariable(SECURITY_KEY_ENV_VAR_NAME);
+        private readonly string GOOGLE_CLIENT_ID = Environment.GetEnvironmentVariable(GOOGLE_API_KEY_ENV_VAR_NAME);
 
-        public JwtHandler(IConfiguration configuration, ILogger<JwtHandler> logger)
+        public JwtHandler(IConfiguration configuration, ILogger<JwtHandler> logger, UserManager<RegisteredUser> userManager)
         {
             _configuration = configuration;
             _jwtSettings = _configuration.GetSection("JwtSettings");
-            _googleSettings = _configuration.GetSection("GoogleAuthSettings");
+            // _googleSettings = _configuration.GetSection("GoogleAuthSettings");
             _logger = logger;
+            _userManager = userManager;
         }
 
         public SigningCredentials GetSigningCredentials()
@@ -32,12 +40,19 @@ namespace Caniactivity.Backend.JwtFeatures
             return new SigningCredentials(secret, SECURITY_ALGORITHM);
         }
 
-        public List<Claim> GetClaims(IdentityUser user)
+        public async Task<List<Claim>> GetClaims(RegisteredUser user)
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Email)
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+            var userRoles = await _userManager.GetRolesAsync(user);
+            foreach (var userRole in userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, userRole));
+            }
+
             return claims;
         }
 
@@ -52,25 +67,25 @@ namespace Caniactivity.Backend.JwtFeatures
             return tokenOptions;
         }
 
-        public string GenerateToken(IdentityUser user)
+        public async Task<string> GenerateToken(RegisteredUser user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SECURITY_KEY));
             var signingCredentials = new SigningCredentials(securityKey, SECURITY_ALGORITHM);
 
-            var claims = this.GetClaims(user);
+            var claims = await this.GetClaims(user);
             var tokenOptions = this.GenerateTokenOptions(signingCredentials, claims);
             var token = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
             return token;
         }
 
-        public ClaimsPrincipal ValidateToken(string token)
+        public ClaimsPrincipal ValidateToken(string token, bool validateLifetime = true)
         {
             var validationParameters = new TokenValidationParameters()
             {
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SECURITY_KEY)),
                 ValidAudience = _jwtSettings["validAudience"],
                 ValidIssuer = _jwtSettings["validIssuer"],
-                ValidateLifetime = true,
+                ValidateLifetime = validateLifetime,
                 ValidateAudience = true,
                 ValidateIssuer = true,
                 ValidateIssuerSigningKey = false
@@ -91,7 +106,7 @@ namespace Caniactivity.Backend.JwtFeatures
             {
                 var settings = new GoogleJsonWebSignature.ValidationSettings()
                 {
-                    Audience = new List<string>() { _googleSettings.GetSection("clientId").Value }
+                    Audience = new List<string>() { GOOGLE_CLIENT_ID }
                 };
                 var payload = await GoogleJsonWebSignature.ValidateAsync(token, settings);
                 return payload;

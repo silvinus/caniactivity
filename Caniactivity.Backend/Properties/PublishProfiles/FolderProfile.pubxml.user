@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\Sources\caniactivity\Caniactivity.Backend\bin\Release\net7.0\publish\</_PublishTargetUrl>
+    <History>True|2023-09-14T22:16:32.9630724Z;True|2023-09-14T23:54:19.0094213+02:00;True|2023-09-14T23:43:58.9500786+02:00;True|2023-09-14T23:34:56.6695503+02:00;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

@@ -2,11 +2,11 @@ using AutoMapper;
 using Caniactivity.Backend.Database.Repositories;
 using Caniactivity.Backend.JwtFeatures;
 using Caniactivity.Models;
-using Duende.IdentityServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace Caniactivity.Controllers
 {
@@ -34,12 +34,12 @@ namespace Caniactivity.Controllers
         [HttpPost(Name = "PostLogin")]
         public async Task<IActionResult> Login([FromBody] LoginCredentialDto credential)
         {
-            var user = await _userManager.FindByNameAsync(credential.Email);
+            var user = await _userManager.FindByEmailAsync(credential.Email);
 
             if (user == null || !await _userManager.CheckPasswordAsync(user, credential.Password))
                 return Unauthorized(new AuthResponseDto { ErrorMessage = "Invalid Authentication" });
 
-            var token = _jwtHandler.GenerateToken(user);
+            var token = await _jwtHandler.GenerateToken(user);
             string refreshToken = _jwtHandler.GenerateRefreshToken();
 
             user.RefreshToken = refreshToken;
@@ -51,7 +51,7 @@ namespace Caniactivity.Controllers
                 IsAuthSuccessful = true,
                 Token = token,
                 RefreshToken = refreshToken,
-                User = new UserDto { Email = user.Email, FirstName = user.FirstName, LastName = user.LastName }
+                User = new UserDto { Id = user.Id, Email = user.Email, FirstName = user.FirstName, LastName = user.LastName }
             });
         }
 
@@ -66,9 +66,9 @@ namespace Caniactivity.Controllers
             if (!result.Succeeded)
             {
                 var errors = result.Errors.Select(e => e.Description);
-
                 return BadRequest(new RegistrationResponseDto { Errors = errors });
             }
+            await _userManager.AddToRoleAsync(user, UserRoles.Member);
 
             return StatusCode(201);
         }
@@ -118,7 +118,7 @@ namespace Caniactivity.Controllers
                     return BadRequest("Invalid External Authentication.");
 
                 //check for the Locked out account
-                var token = _jwtHandler.GenerateToken(user); string refreshToken = _jwtHandler.GenerateRefreshToken();
+                var token = await _jwtHandler.GenerateToken(user); string refreshToken = _jwtHandler.GenerateRefreshToken();
 
                 user.RefreshToken = refreshToken;
                 user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
@@ -145,7 +145,7 @@ namespace Caniactivity.Controllers
         public async Task<IActionResult> ReconnectToken([FromBody] UnvalidatedTokenDto reconnectToken)
         {
             var claim = _jwtHandler.ValidateToken(reconnectToken.Credential);
-            var user = await _userManager.FindByNameAsync(claim.Claims.First(claim => claim.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name").Value);
+            var user = await _userManager.FindByEmailAsync(claim.Claims.First(claim => claim.Type == ClaimTypes.Name).Value);
             return Ok(new AuthResponseDto { 
                 IsAuthSuccessful = true, 
                 Token = reconnectToken.Credential, 
@@ -160,22 +160,21 @@ namespace Caniactivity.Controllers
             );
         }
 
-        [HttpPost]
-        [Route("refresh")]
-        public IActionResult Refresh(TokenRequestDto tokenApiModel)
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(TokenRequestDto tokenApiModel)
         {
             if (tokenApiModel is null)
                 return BadRequest("Invalid client request");
             string accessToken = tokenApiModel.AccessToken;
             string refreshToken = tokenApiModel.RefreshToken;
-            var principal = _jwtHandler.ValidateToken(accessToken);
+            var principal = _jwtHandler.ValidateToken(accessToken, false);
 
             var username = principal.Identity.Name; //this is mapped to the Name claim by default
             var user = _userRepository.GetByEmail(username);
             if (user is null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
                 return BadRequest("Invalid client request");
 
-            var newAccessToken = _jwtHandler.GenerateToken(user);
+            var newAccessToken = await _jwtHandler.GenerateToken(user);
             var newRefreshToken = _jwtHandler.GenerateRefreshToken();
             user.RefreshToken = newRefreshToken;
             _userRepository.Update(user);
@@ -188,8 +187,7 @@ namespace Caniactivity.Controllers
             });
         }
 
-        [HttpPost, Authorize]
-        [Route("revoke")]
+        [HttpPost("revoke"), Authorize]
         public IActionResult Revoke()
         {
             var username = User.Identity.Name;
@@ -231,16 +229,19 @@ namespace Caniactivity.Controllers
 
     public class UserForRegistrationDto
     {
+        [Required(ErrorMessage = "Le prénom est obligatoire")]
         public string? FirstName { get; set; }
+
+        [Required(ErrorMessage = "Le nom est obligatoire")]
         public string? LastName { get; set; }
 
-        [Required(ErrorMessage = "Email is required.")]
+        [Required(ErrorMessage = "L'email est obligatoire")]
         public string? Email { get; set; }
 
-        [Required(ErrorMessage = "Password is required")]
+        [Required(ErrorMessage = "Le mot de passe est obligatoire")]
         public string? Password { get; set; }
 
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        [Compare("Password", ErrorMessage = "Le message et la confirmation ne correspondent pas.")]
         public string? ConfirmPassword { get; set; }
     }
 

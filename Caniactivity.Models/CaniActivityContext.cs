@@ -1,5 +1,4 @@
-﻿using Bogus;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,42 +14,75 @@ public class CaniActivityContext: IdentityDbContext<RegisteredUser>
     public DbSet<RegisteredUser> RegisteredUsers { get; set; }
     public DbSet<Dog> Dog { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
+    public DbSet<EmailOutbox> Outbox { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
     }
 
-    public static async Task InitializeAsync(CaniActivityContext context, UserManager<RegisteredUser> userMngr)
+    public static async Task InitializeAsync(CaniActivityContext context, 
+        UserManager<RegisteredUser> userMngr, RoleManager<IdentityRole> roleMngr)
     {
-        await context.Database.MigrateAsync();
-        if(context.RegisteredUsers.Any())
-            return;
-
-        var fake = new Faker<RegisteredUser>()
-            .Rules((f, r) => r.Id = Guid.NewGuid().ToString())
-            .Rules((f, r) => r.FirstName = f.Name.FirstName())
-            .Rules((f, r) => r.LastName = f.Name.LastName())
-            .Rules((f, r) => r.Email = f.Person.Email)
-            .Rules((f, r) => r.UserName = r.Email)
-            .Rules((f, r) => r.NormalizedUserName = r.UserName?.ToUpperInvariant())
-            .Rules((f, r) => r.Phone = f.Phone.PhoneNumber())
-            .RuleFor(r => r.Dogs, (f, r) => f.Make(f.Random.Number(1, 3), () => new Dog()
+        string[] roleNames = { "Administrator", "Member" };
+        RegisteredUser[] administrators =
+        {
+            new RegisteredUser()
             {
-                Id = Guid.NewGuid(),
-                Name = f.Name.FirstName(),
-                Handler = r,
-                Breed = f.Random.Word()
-            }));
+                Id = Guid.NewGuid().ToString(),
+                FirstName = "Aline",
+                LastName = "BON",
+                Email = "administrator@caniactivity.com",
+                UserName = "Aline",
+                Status = RegisteredUserStatus.Approved
+            },
+            new RegisteredUser()
+            {
+                Id = Guid.NewGuid().ToString(),
+                FirstName = "Sylvain",
+                LastName = "CESARI",
+                Email = "syl.cesari@hotmail.fr",
+                UserName = "Sylvain",
+                Status = RegisteredUserStatus.Approved
+            }
+        };
 
-        var users = fake.Generate(100);
-        users.ForEach(async (user) => await userMngr.CreateAsync(user, "Aveizieux$1"));
+        await context.Database.MigrateAsync();
+
+        foreach (var roleName in roleNames)
+        {
+            var roleExist = await roleMngr.RoleExistsAsync(roleName);
+            if (!roleExist)
+            {
+                IdentityRole identityRole = new IdentityRole(roleName);
+                await roleMngr.CreateAsync(identityRole);
+                //await roleMngr.AddClaimAsync(identityRole, new Claim("permissions", "project.administrator"));
+            }
+        }
+
+        foreach (var admin in administrators)
+        {
+            var adminExist = await userMngr.FindByEmailAsync(admin.Email);
+            if (adminExist is null)
+            {
+                await userMngr.CreateAsync(admin, "Caniactivity$1");
+                adminExist = admin;
+            }
+            var hasAdminRole = await userMngr.IsInRoleAsync(admin, Models.UserRoles.Admin);
+            if(!hasAdminRole)
+            {
+                await userMngr.AddToRoleAsync(adminExist, "Administrator");
+            }
+        }
+
         await context.SaveChangesAsync();
     }
 }
 
 public class RegisteredUser: IdentityUser
 {
+    public const string ADMINISTRATOR_MAIL = "sylvain.cesari@hotmail.fr";
+
     public RegisteredUser()
     {
         this.Id = Guid.NewGuid().ToString();
@@ -90,10 +122,25 @@ public class Appointment
     }
 
     public Guid Id { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public string StartDate { get; set; }
+    public string EndDate { get; set; }
     public ICollection<Dog> Dogs { get; set; } = new List<Dog>();
     public AppointmentStatus Status { get; set; }
+    public RegisteredUser RegisteredBy { get; set; }
+}
+
+public class EmailOutbox
+{
+    public EmailOutbox()
+    {
+        this.Id = Guid.NewGuid();
+    }
+
+    public Guid Id { get; set; }
+    public string To { get; set; } = String.Empty;
+    public string Subject { get; set; } = String.Empty;
+    public string Body { get; set; } = String.Empty;
+    public bool IsProcessed { get; set; } = false;
 }
 
 public enum SSOProvider

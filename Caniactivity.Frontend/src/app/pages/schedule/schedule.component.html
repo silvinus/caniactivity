@@ -1,6 +1,7 @@
 <h2 class="content-block">Schedule</h2>
 <div class="content-block">
     <dx-scheduler [dataSource]="appointmentsData"
+                  timeZone="Europe/Paris"
                   [views]="views"
                   [currentView]="currentView"
                   [firstDayOfWeek]="1"
@@ -40,18 +41,20 @@
                 <dx-box direction="row" width="100%">
                     <dxi-item class="rect demo-dark" [ratio]="2">
                         <ul>
-                            <li *ngFor="let dog of model.targetedAppointmentData.dogs">{{ dog.name }} (<span *ngIf="dog.handler">{{ dog.handler.firstName }}</span>)</li>
+                            <li *ngFor="let dog of model.targetedAppointmentData.dogs">{{ dog.name }} (<span *ngIf="dog.handler">{{ dog.breed }}</span>)</li>
                         </ul>
                     </dxi-item>
                     <dxi-item class="rect demo-dark" [ratio]="1">
                         <dx-box direction="column" width="100%">
                             <dxi-item class="rect demo-dark" [ratio]="1">
                                 <dx-button icon="check"
+                                           *ngIf="isAdmin"
                                            (onClick)="validate($event, model.targetedAppointmentData)">
                                 </dx-button>
                             </dxi-item>
                             <dxi-item class="rect demo-dark" [ratio]="1">
                                 <dx-button icon="trash"
+                                           [disabled]="!canDelete(model.targetedAppointmentData)"
                                            (onClick)="remove($event, model.targetedAppointmentData)">
                                 </dx-button>
                             </dxi-item>

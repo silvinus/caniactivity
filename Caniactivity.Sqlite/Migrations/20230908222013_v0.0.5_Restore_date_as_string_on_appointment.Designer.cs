@@ -3,6 +3,7 @@ using System;
 using Caniactivity.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Caniactivity.Sqlite.Migrations
 {
     [DbContext(typeof(CaniActivityContext))]
-    partial class CaniActivityContextModelSnapshot : ModelSnapshot
+    [Migration("20230908222013_v0.0.5_Restore_date_as_string_on_appointment")]
+    partial class v005_Restore_date_as_string_on_appointment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.9");
@@ -42,9 +45,6 @@ namespace Caniactivity.Sqlite.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("RegisteredById")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("StartDate")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -53,8 +53,6 @@ namespace Caniactivity.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RegisteredById");
 
                     b.ToTable("Appointments");
                 });
@@ -84,32 +82,6 @@ namespace Caniactivity.Sqlite.Migrations
                     b.HasIndex("HandlerId");
 
                     b.ToTable("Dog");
-                });
-
-            modelBuilder.Entity("Caniactivity.Models.EmailOutbox", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsProcessed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("To")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Outbox");
                 });
 
             modelBuilder.Entity("Caniactivity.Models.RegisteredUser", b =>
@@ -345,15 +317,6 @@ namespace Caniactivity.Sqlite.Migrations
                         .HasForeignKey("DogsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Caniactivity.Models.Appointment", b =>
-                {
-                    b.HasOne("Caniactivity.Models.RegisteredUser", "RegisteredBy")
-                        .WithMany()
-                        .HasForeignKey("RegisteredById");
-
-                    b.Navigation("RegisteredBy");
                 });
 
             modelBuilder.Entity("Caniactivity.Models.Dog", b =>

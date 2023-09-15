@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
-import { HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http'
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http'
 import { AppInfoService } from './app-info.service';
-import { catchError, firstValueFrom, Observable, Subscriber } from 'rxjs';
+import { BehaviorSubject, catchError, filter, firstValueFrom, map, Observable, of, Subscriber, switchMap, take, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Token } from '@angular/compiler';
 
@@ -17,11 +17,12 @@ const defaultPath = '/';
 
 @Injectable()
 export class AuthService {
-  private _user: IUser | null = null;
+  private _user: IUser = { id: "", email: ""};
   private _displayLogin: boolean = false;
   private _lastAuthenticatedPath: string = defaultPath;
   private $user: Observable<IUser> | undefined;
   private $userSubscriber: Subscriber<IUser> | undefined;
+  private ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 
   constructor(private router: Router, private httpClient: HttpClient, private infoService: AppInfoService) {
     this.$user = new Observable((observer) => {
@@ -30,14 +31,14 @@ export class AuthService {
         credential: localStorage.getItem("token"),
         provider: parseInt(localStorage.getItem("provider") || "999")
       })
-        .pipe(
+        /*.pipe(
           catchError(e => {
             if (!this.displayLoginForm) {
               this.logOut();
             }
             throw e;
           })
-        ).subscribe(u => observer.next(this.toIUser(u)));
+        )*/.subscribe(u => observer.next(this.toIUser(u)));
     })
   }
 
@@ -47,6 +48,14 @@ export class AuthService {
 
   get user(): Observable<IUser> | undefined {
     return this.$user;
+  }
+
+  get roles(): string {
+    let token = localStorage.getItem('token') || undefined;
+    if (token == undefined) return '';
+
+    let decoded = (JSON.parse(atob(token.split('.')[1])));
+    return decoded[this.ROLE_CLAIM];
   }
 
   get userEmail(): string | undefined {
@@ -94,6 +103,7 @@ export class AuthService {
       this._user = this.toIUser(result);
       this.$userSubscriber?.next(this._user);
       this.setToken(result.token, result.refreshToken, 0);
+      this.setUser(this._user);
       this.router.navigate([this._lastAuthenticatedPath]);
 
       return {
@@ -118,28 +128,28 @@ export class AuthService {
     this._user = this.toIUser(validated)
     this.$userSubscriber?.next(this._user);
     this.setToken(validated.token, validated.refreshToken, 1);
+    this.setUser(this._user);
     this.router.navigate([this._lastAuthenticatedPath]);
   }
 
   async getUserInfo() {
     if (this.$user == undefined) return;
 
-    let logged = await firstValueFrom(this.$user)
+    let logged = this.getUser();
 
     return await firstValueFrom(
       this.httpClient.post<any>(`${environment.apiUrl}/api/user/userinfo`, {
-        email: logged.email
+        email: logged.data.email
       })
     );
   }
 
-  async getUser() {
+  getUser() {
     try {
-      if (this.$user == undefined) return { isOk: false, data: null }
+      let serialized = localStorage.getItem("user");
+      if (serialized == undefined) return { isOk: false, data: { id: "", email: "" } }
 
-      let reconnected = await firstValueFrom(this.$user);
-
-      this._user = reconnected;
+      this._user = JSON.parse(serialized);
 
       return {
         isOk: true,
@@ -150,24 +160,30 @@ export class AuthService {
       this.logOut();
       return {
         isOk: false,
-        data: null
+        data: { id: "", email: "" }
       };
     }
   }
 
-  async createAccount(email: string, password: string) {
+  async createAccount(email: string, password: string, confirmPassword: string, firstname: string, lastname: string) {
     try {
-      // Send request
+      await firstValueFrom(this.httpClient.post<LoggedUser>(`${environment.apiUrl}/api/accounts/registration`, {
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword,
+        firstName: firstname,
+        lastName: lastname
+      }));
 
       this.router.navigate(['/create-account']);
       return {
         isOk: true
       };
     }
-    catch {
+    catch (e: any) {
       return {
         isOk: false,
-        message: "Failed to create account"
+        message: `Impossible de créer le compte: ${Object.keys(e.error.errors).map(r => e.error.errors[r]).join('<br>')}`
       };
     }
   }
@@ -205,34 +221,58 @@ export class AuthService {
   }
 
   async logOut() {
-    this._user = null;
+    this._user = { id: "", email: "" };
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('provider');
+    localStorage.removeItem('user');
+    this.$userSubscriber?.next(undefined);
     // TODO revoke
     this.router.navigate([defaultPath]);
   }
 
-  async tryRefreshingTokens(token: string | null): Promise<boolean> {
+  tryRefreshingTokens(token: string | null): Observable<boolean> {
     const refreshToken: string | null = localStorage.getItem("refreshToken");
     if (!token || !refreshToken) {
-      return false;
+      return of(false);
     }
 
     const credentials = JSON.stringify({ accessToken: token, refreshToken: refreshToken });
 
-    try {
-      let tokens = await firstValueFrom(
-        this.httpClient.post<RefreshedToken>(`${environment.apiUrl}/api/accounts/refresh`, credentials)
-      );
-      this.setToken(tokens.accessToken, tokens.refreshToken, Number.parseInt(localStorage.getItem("Provider") || "999"));
-      return true;
-    }
-    catch (e) {
-      console.error(e);
-      this.logOut();
-      return false;
-    }
+    return this.httpClient.post<RefreshedToken>(`${environment.apiUrl}/api/accounts/refresh`, credentials)
+      .pipe(
+        map(tokens => {
+          this.setToken(tokens.accessToken, tokens.refreshToken, Number.parseInt(localStorage.getItem("Provider") || "999"));
+          return true;
+        }),
+        catchError((e: any) => {
+          console.error(e);
+          this.logOut();
+          throw 'error when refresh token. Details: ' + e;
+        })
+      )
+      //.subscribe({
+      //  next: tokens => {
+      //    this.setToken(tokens.accessToken, tokens.refreshToken, Number.parseInt(localStorage.getItem("Provider") || "999"));
+      //  },
+      //  error: (e) => {
+      //    console.error(e);
+      //    this.logOut();
+      //  }
+      //})
+
+    //try {
+    //  let tokens = await firstValueFrom(
+    //    this.httpClient.post<RefreshedToken>(`${environment.apiUrl}/api/accounts/refresh`, credentials)
+    //  );
+    //  this.setToken(tokens.accessToken, tokens.refreshToken, Number.parseInt(localStorage.getItem("Provider") || "999"));
+    //  return true;
+    //}
+    //catch (e) {
+    //  console.error(e);
+    //  this.logOut();
+    //  return false;
+    //}
   }
 
   setToken(token: string, refershToken: string, provider: number) {
@@ -240,6 +280,11 @@ export class AuthService {
     localStorage.setItem('refreshToken', refershToken);
     localStorage.setItem('provider', provider.toString());
   }
+
+  setUser(user: IUser) {
+    localStorage.setItem('user', JSON.stringify(user));
+  }
+
 }
 
 class User {
@@ -299,7 +344,7 @@ export class AuthGuardService implements CanActivate {
 
     let token = localStorage.getItem("token");
     if (token && this.isTokenExpired(token)) {
-      const isRefreshSuccess = await this.authService.tryRefreshingTokens(token);
+      const isRefreshSuccess = await firstValueFrom(this.authService.tryRefreshingTokens(token));
       if (!isRefreshSuccess && !isPublicPage) {
         return false;
       }
@@ -311,22 +356,65 @@ export class AuthGuardService implements CanActivate {
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
+  private isRefreshing = false;
+  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+
   constructor(private authService: AuthService) { }
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    let authReq = request;
+
+    if (this.authService.loggedIn) {
+      authReq = this.addHeaders(request, localStorage.getItem('token') || "");
+    }
+
+    return next.handle(authReq).pipe(catchError(error => {
+      if (error instanceof HttpErrorResponse /*&& !authReq.url.includes('auth/signin')*/ && error.status === 401) {
+        return this.handle401Error(authReq, next);
+      }
+
+      return throwError(() => error);
+    }));
+  }
+
+  private handle401Error(request: HttpRequest<any>, next: HttpHandler) {
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+      this.refreshTokenSubject.next(null);
+
+      return this.authService.tryRefreshingTokens(localStorage.getItem('token') || "")
+        .pipe(
+          switchMap((isRefreshed: boolean) => {
+            this.isRefreshing = false;
+            if (isRefreshed) {
+              this.refreshTokenSubject.next(localStorage.getItem('token'));
+              return next.handle(this.addHeaders(request, localStorage.getItem('token') || ""));
+            }
+            return throwError(() => new Error("Token not refreshed"));
+          }),
+          catchError((e) => {
+            this.isRefreshing = false;
+            return throwError(() => e);
+          })
+        );
+    }
+
+    return this.refreshTokenSubject.pipe(
+      filter(token => token !== null),
+      take(1),
+      switchMap((token) => next.handle(this.addHeaders(request, token)))
+    );
+  }
+
+    private addHeaders(request: HttpRequest<any>, token: string) {
     let contentType = {
       "Content-type": request.headers.get("Content-type") || "application/json"
     };
-
-    if (this.authService.loggedIn) {
-      request = request.clone({
-        setHeaders: {
-          ...contentType,
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-    }
-
-    return next.handle(request);
+    return request.clone({
+      setHeaders: {
+        ...contentType,
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
   }
 }

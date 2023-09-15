@@ -3,6 +3,7 @@ import { DxTreeViewModule, DxTreeViewComponent, DxTreeViewTypes } from 'devextre
 import { navigation } from '../../../app-navigation';
 
 import * as events from 'devextreme/events';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-side-navigation-menu',
@@ -33,12 +34,26 @@ export class SideNavigationMenuComponent implements AfterViewInit, OnDestroy {
   private _items!: Record <string, unknown>[];
   get items() {
     if (!this._items) {
-      this._items = navigation.map((item) => {
+      let items = navigation.map((item) => {
         if(item.path && !(/^\//.test(item.path))){
           item.path = `/${item.path}`;
         }
          return { ...item, expanded: !this._compactMode }
-        });
+      });
+
+      this._items = items.filter(w => !w.private);
+      this.authService.user?.subscribe(user => {
+        this._items = items.filter(w => !w.private);
+        items.filter(w => w.private)
+          .forEach(i => {
+            if (user != undefined) {
+              let userRole = this.authService.roles;
+              let userHasRole = i.roles?.indexOf(userRole) != -1;
+              if (userHasRole)
+                this._items.push(i);
+            }
+          })
+      })
     }
 
     return this._items;
@@ -63,7 +78,7 @@ export class SideNavigationMenuComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  constructor(private elementRef: ElementRef) { }
+  constructor(private elementRef: ElementRef, private authService: AuthService) { }
 
   onItemClick(event: DxTreeViewTypes.ItemClickEvent) {
     this.selectedItemChanged.emit(event);

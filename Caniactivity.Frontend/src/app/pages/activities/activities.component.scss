@@ -1,0 +1,22 @@
+.flex-container {
+  display: flex;
+}
+
+.flex-child {
+  flex: 1;
+}
+
+.flex-child-img {
+  flex: 0;
+}
+
+.flex-child-first {
+  margin-right: 20px;
+}
+
+hr.dashed {
+  border-top: 1px dashed #bbb;
+  width: 33%;
+  margin-top: 20px;
+  margin-bottom: 20px
+}

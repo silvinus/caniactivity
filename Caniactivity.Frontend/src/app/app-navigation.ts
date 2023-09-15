@@ -25,20 +25,24 @@ export const navigation = [
   {
     text: 'Réservation',
     path: '/pages/schedule',
-    icon: 'clock'
+    icon: 'clock',
+    private: true,
+    roles: ['Member', 'Administrator']
   },
   {
     text: 'Administration',
     icon: 'folder',
+    private: true,
+    roles: ['Administrator'],
     items: [
       {
         text: 'Users',
         path: '/pages/users'
       },
-      {
-        text: 'Scheduler Admin',
-        path: '/pages/scheduler-admin'
-      }
+      //{
+      //  text: 'Scheduler Admin',
+      //  path: '/pages/scheduler-admin'
+      //}
     ]
   }
 ];

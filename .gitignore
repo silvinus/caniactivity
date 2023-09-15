@@ -7,3 +7,5 @@
 .vs
 *.targets
 *.db-*
+/Caniactivity.Backend/env.var
+/Caniactivity.Backend/Properties/launchSettings.json

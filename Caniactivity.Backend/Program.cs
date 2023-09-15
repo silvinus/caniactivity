@@ -1,7 +1,6 @@
 
 using Caniactivity.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -10,8 +9,8 @@ using Caniactivity.Backend.JwtFeatures;
 using AutoMapper.Internal;
 using Caniactivity.Backend.Mapper;
 using Caniactivity.Backend.Database.Repositories;
-using Microsoft.Extensions.Logging.Configuration;
-using Caniactivity.Controllers;
+using Caniactivity.Backend.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Caniactivity
 {
@@ -54,37 +53,50 @@ namespace Caniactivity
             #region Authentication
 
             builder.Services.AddIdentity<RegisteredUser, IdentityRole>()
-                            .AddEntityFrameworkStores<CaniActivityContext>();
+                            .AddEntityFrameworkStores<CaniActivityContext>()
+                            .AddDefaultTokenProviders();
+
             builder.Services.AddAuthentication(opt =>
             {
                 opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+                .AddJwtBearer(options =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = false,
-                    ValidIssuer = jwtSettings["validIssuer"],
-                    ValidAudience = jwtSettings["validAudience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-                        .GetBytes(JwtHandler.SECURITY_KEY)) // .GetSection("securityKey").Value
-                };
-            })
-            .AddGoogle(googleOptions =>
-            {
-                googleOptions.ClientId = config["Authentication:Google:ClientId"];
-                googleOptions.ClientSecret = config["Authentication:Google:ClientSecret"];
-            }); 
+                    options.SaveToken = true;
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = false,
+                        ValidIssuer = jwtSettings["validIssuer"],
+                        ValidAudience = jwtSettings["validAudience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+                            .GetBytes(Environment.GetEnvironmentVariable(JwtHandler.SECURITY_KEY_ENV_VAR_NAME)))
+                    };
+                })
+                .AddGoogle(googleOptions =>
+                {
+                    googleOptions.ClientId = Environment.GetEnvironmentVariable(JwtHandler.GOOGLE_API_KEY_ENV_VAR_NAME); // config["Authentication:Google:ClientId"];
+                    googleOptions.ClientSecret = Environment.GetEnvironmentVariable(JwtHandler.GOOGLE_CLIENT_SECRET_ENV_VAR_NAME);
+                }); 
             builder.Services.AddScoped<JwtHandler>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IDogRepository, DogRepository>();
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
             #endregion
+
+            var emailConfig = builder.Configuration
+                                    .GetSection("EmailConfiguration")
+                                    .Get<EmailConfiguration>();
+            builder.Services.AddSingleton(emailConfig);
+            builder.Services.AddSingleton<IEmailService, EmailService>();
+            builder.Services.AddSingleton<OutboxRecoverTask>();
+            builder.Services.AddHostedService(
+                provider => provider.GetRequiredService<OutboxRecoverTask>());
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -102,8 +114,14 @@ namespace Caniactivity
             {
                 var db = scope.ServiceProvider.GetRequiredService<CaniActivityContext>();
                 var userMngr = scope.ServiceProvider.GetRequiredService<UserManager<RegisteredUser>>();
-                await CaniActivityContext.InitializeAsync(db, userMngr);
+                var roleMngr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                await CaniActivityContext.InitializeAsync(db, userMngr, roleMngr);
             }
+
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -112,8 +130,16 @@ namespace Caniactivity
                 app.UseSwaggerUI();
                 //app.UseMigrationEndpoint();
             }
+            else
+            {
+                app.UseDefaultFiles();
+                app.UseStaticFiles();
+            }
 
-            app.UseHttpsRedirection();
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
             app.UseCors("corsapp");
 
             app.UseStaticFiles();

@@ -8,7 +8,7 @@ namespace Caniactivity.Backend.Database.Repositories
         Appointment GetById(Guid appointmentId);
         IEnumerable<Appointment> GetByRange(DateTime startDate, DateTime endDate);
         IEnumerable<Appointment> GetAll();
-        IEnumerable<Appointment> GetAllWithDogsCount();
+        IEnumerable<object> GetAllWithDogsCount();
         Task Insert(Appointment appointment);
         void Update(Appointment appointment);
         void Delete(Guid appointmentId);
@@ -35,12 +35,12 @@ namespace Caniactivity.Backend.Database.Repositories
                     .Appointments;
         }
 
-        public IEnumerable<Appointment> GetAllWithDogsCount()
+        public IEnumerable<object> GetAllWithDogsCount()
         {
             return activityContext
                     .Appointments
-                    .Select(w => new Appointment()
-                        {
+                    .Select(w =>
+                        new { 
                             EndDate= w.EndDate,
                             StartDate = w.StartDate, 
                             Status = w.Status,
@@ -57,7 +57,13 @@ namespace Caniactivity.Backend.Database.Repositories
                                     Id = x.Handler.Id,
                                     Email = x.Handler.Email
                                 }
-                            })
+                            }),
+                            RegisteredBy = new RegisteredUser()
+                            {
+                                Id = w.RegisteredBy.Id,
+                                FirstName = w.RegisteredBy.FirstName,
+                            },
+                            HasMultipleMemberRegistered = w.Dogs.Select(x => x.Handler).Distinct().Count() > 1
                         }
                     );
         }
@@ -67,6 +73,8 @@ namespace Caniactivity.Backend.Database.Repositories
             return activityContext
                  .Appointments
                  .Include(w => w.Dogs)
+                 .ThenInclude(x => x.Handler)
+                 .Include(w => w.RegisteredBy)
                  .Where(w => w.Id == appointmentId)
                  .First();
         }
@@ -77,7 +85,7 @@ namespace Caniactivity.Backend.Database.Repositories
             return activityContext
                     .Appointments
                     .Include(w => w.Dogs)
-                    .Where(w => startDate >= w.StartDate && w.EndDate <= endDate);
+                    .Where(w => startDate >= DateTime.Parse(w.StartDate) && DateTime.Parse(w.EndDate) <= endDate);
         }
 
         public async Task Insert(Appointment appointment)

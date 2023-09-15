@@ -17,10 +17,15 @@
     <RootNamespace>Caniactivity.Backend</RootNamespace>
     <GenerateRuntimeConfigurationFiles>True</GenerateRuntimeConfigurationFiles>
     <UserSecretsId>3ab44dbc-4c63-485d-954d-33c9904454a1</UserSecretsId>
+    <FrontendRoot>../Caniactivity.Frontend/</FrontendRoot>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Database\CaniActivity.Sqlite.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,12 +37,17 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.9" />
+    <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.9" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Caniactivity.Frontend\Caniactivity.Frontend.esproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="..\Caniactivity.Models\Caniactivity.Models.csproj" />
     <ProjectReference Include="..\Caniactivity.Sqlite\Caniactivity.Sqlite.csproj" />
   </ItemGroup>
