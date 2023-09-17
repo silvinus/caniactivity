@@ -38,13 +38,20 @@ namespace Caniactivity
                         x => x.MigrationsAssembly(Database.Provider.Sqlite.Assembly)
                     );
                 }
-                //if (provider == Postgres.Name)
-                //{
-                //    options.UseNpgsql(
-                //        config.GetConnectionString(Postgres.Name)!,
-                //        x => x.MigrationsAssembly(Postgres.Assembly)
-                //    );
-                //}
+                if (provider == Database.Provider.Postgres.Name)
+                {
+                    options.UseNpgsql(
+                        config.GetConnectionString(Database.Provider.Postgres.Name)!,
+                        x => x.MigrationsAssembly(Database.Provider.Postgres.Assembly)
+                    );
+                }
+                if (provider == Database.Provider.Mysql.Name)
+                {
+                    options.UseMySQL(
+                        config.GetConnectionString(Database.Provider.Mysql.Name)!,
+                        x => x.MigrationsAssembly(Database.Provider.Mysql.Assembly)
+                    );
+                }
             });
 
             #endregion

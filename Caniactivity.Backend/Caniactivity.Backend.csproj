@@ -37,7 +37,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.9" />
+    <PackageReference Include="MySql.EntityFrameworkCore" Version="7.0.5" />
     <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.9" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
@@ -50,6 +52,8 @@
     </ProjectReference>
     <ProjectReference Include="..\Caniactivity.Models\Caniactivity.Models.csproj" />
     <ProjectReference Include="..\Caniactivity.Sqlite\Caniactivity.Sqlite.csproj" />
+    <ProjectReference Include="..\Caniactivity.Postgres\Caniactivity.Postgres.csproj" />
+    <ProjectReference Include="..\Caniactivity.Mysql\Caniactivity.Mysql.csproj" />
   </ItemGroup>
 
 </Project>

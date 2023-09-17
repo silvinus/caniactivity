@@ -16,6 +16,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Caniactivity.Postgres", "Caniactivity.Postgres\Caniactivity.Postgres.csproj", "{C8F0C3B6-0219-40D8-A686-62B32A557E45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caniactivity.Mysql", "Caniactivity.Mysql\Caniactivity.Mysql.csproj", "{DA9D1D48-1A0D-4476-B071-AFA8354C96C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +44,14 @@ Global
 		{A2A17ED1-16E0-440F-90FF-E9A5407A427B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2A17ED1-16E0-440F-90FF-E9A5407A427B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2A17ED1-16E0-440F-90FF-E9A5407A427B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8F0C3B6-0219-40D8-A686-62B32A557E45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8F0C3B6-0219-40D8-A686-62B32A557E45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8F0C3B6-0219-40D8-A686-62B32A557E45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8F0C3B6-0219-40D8-A686-62B32A557E45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA9D1D48-1A0D-4476-B071-AFA8354C96C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA9D1D48-1A0D-4476-B071-AFA8354C96C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA9D1D48-1A0D-4476-B071-AFA8354C96C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA9D1D48-1A0D-4476-B071-AFA8354C96C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

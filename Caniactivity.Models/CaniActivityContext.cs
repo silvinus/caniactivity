@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Caniactivity.Models.Attributes;
+using Caniactivity.Models.Converter;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Caniactivity.Models;
 
 public class CaniActivityContext: IdentityDbContext<RegisteredUser>
 {
-    public CaniActivityContext(DbContextOptions<CaniActivityContext> options)
+    private readonly IConfiguration _configuration;
+    public CaniActivityContext(DbContextOptions options, IConfiguration configuration)
         : base(options)
     {
+        this._configuration = configuration;
     }
 
     public DbSet<RegisteredUser> RegisteredUsers { get; set; }
@@ -19,6 +24,10 @@ public class CaniActivityContext: IdentityDbContext<RegisteredUser>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        var provider = this._configuration["provider"];
+        if (provider == "Postgres")
+            modelBuilder.ApplyUtcDateTimeConverter();
     }
 
     public static async Task InitializeAsync(CaniActivityContext context, 
@@ -96,6 +105,7 @@ public class RegisteredUser: IdentityUser
     public RegisteredUserStatus Status { get; set; }
     public ICollection<Dog> Dogs { get; set; } = new List<Dog>();
     public string? RefreshToken { get; set; }
+    [IsUtc]
     public DateTime RefreshTokenExpiryTime { get; set; }
 }
 

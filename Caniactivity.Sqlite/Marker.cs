@@ -1,8 +1,4 @@
-﻿using Bogus.Platform;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.EntityFrameworkCore;
-using System.Reflection;
+﻿using Microsoft.EntityFrameworkCore;
 using Caniactivity.Models;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +22,6 @@ public class SqliteMigrationContext : IDesignTimeDbContextFactory<CaniActivityCo
                 x => x.MigrationsAssembly("Caniactivity.Sqlite")
             );
 
-        return new CaniActivityContext(optionsBuilder.Options);
+        return new CaniActivityContext(optionsBuilder.Options, configurationRoot);
     }
 }
