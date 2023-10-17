@@ -21,25 +21,25 @@ export class AuthService {
   private _displayLogin: boolean = false;
   private _lastAuthenticatedPath: string = defaultPath;
   private $user: Observable<IUser> | undefined;
-  private $userSubscriber: Subscriber<IUser> | undefined;
+  private $$userHttp: Observable<LoggedUser> | undefined;
+  private $userSubscriber: Subscriber<IUser>[] = [];
   private ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 
   constructor(private router: Router, private httpClient: HttpClient, private infoService: AppInfoService) {
     this.$user = new Observable((observer) => {
-      this.$userSubscriber = observer;
-      this.httpClient.post<LoggedUser>(`${environment.apiUrl}/api/accounts/reconnect`, {
-        credential: localStorage.getItem("token"),
-        provider: parseInt(localStorage.getItem("provider") || "999")
-      })
-        /*.pipe(
-          catchError(e => {
-            if (!this.displayLoginForm) {
-              this.logOut();
-            }
-            throw e;
-          })
-        )*/.subscribe(u => observer.next(this.toIUser(u)));
-    })
+      this.$userSubscriber.push(observer);
+
+      if (this.$$userHttp == undefined) {
+        this.$$userHttp = this.httpClient.post<LoggedUser>(`${environment.apiUrl}/api/accounts/reconnect`, {
+          credential: localStorage.getItem("token"),
+          provider: parseInt(localStorage.getItem("provider") || "999")
+        });
+        this.$$userHttp.subscribe(u => this.$userSubscriber.forEach(w => w.next(this.toIUser(u))));
+      }
+      else {
+        this.$userSubscriber.forEach(w => w.next(this._user));
+      }
+    });
   }
 
   get loggedIn(): boolean {
@@ -101,7 +101,7 @@ export class AuthService {
       }
 
       this._user = this.toIUser(result);
-      this.$userSubscriber?.next(this._user);
+      this.$userSubscriber.forEach(w => w.next(this._user));
       this.setToken(result.token, result.refreshToken, 0);
       this.setUser(this._user);
       this.router.navigate([this._lastAuthenticatedPath]);
@@ -126,7 +126,7 @@ export class AuthService {
     }));
 
     this._user = this.toIUser(validated)
-    this.$userSubscriber?.next(this._user);
+    this.$userSubscriber.forEach(w => w.next(this._user));
     this.setToken(validated.token, validated.refreshToken, 1);
     this.setUser(this._user);
     this.router.navigate([this._lastAuthenticatedPath]);
@@ -226,7 +226,7 @@ export class AuthService {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('provider');
     localStorage.removeItem('user');
-    this.$userSubscriber?.next(undefined);
+    this.$userSubscriber.forEach(w => w.next(undefined));
     // TODO revoke
     this.router.navigate([defaultPath]);
   }
@@ -325,7 +325,7 @@ export class AuthGuardService implements CanActivate {
       'change-password/:recoveryCode'
     ].includes(route.routeConfig?.path || defaultPath);
     const isPublicPage = [
-      'home', 'pages/activities', 'pages/environment', 'pages/tarifs'
+      'home', 'pages/activities', 'pages/environment', 'pages/tarifs', 'pages/cgu', 'pages/privacy'
     ].includes(route.routeConfig?.path || defaultPath);
 
     if (isLoggedIn && isAuthForm) {

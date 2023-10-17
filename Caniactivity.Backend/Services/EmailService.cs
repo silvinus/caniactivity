@@ -1,4 +1,5 @@
 ﻿using Caniactivity.Models;
+using Duende.IdentityServer.Models;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +21,9 @@ namespace Caniactivity.Backend.Services
 
         private readonly EmailConfiguration _emailConfig;
         private readonly IServiceProvider serviceProvider;
+        private readonly IHostEnvironment _hostEnvironment;
 
-        public EmailService(EmailConfiguration configuration, IServiceProvider serviceProvider)
+        public EmailService(EmailConfiguration configuration, IServiceProvider serviceProvider, IHostEnvironment hostEnvironment)
         {
             _emailConfig = configuration;
             _emailConfig.From = Environment.GetEnvironmentVariable(SMTP_FROM_ENV_VAR_NAME);
@@ -29,6 +31,7 @@ namespace Caniactivity.Backend.Services
             _emailConfig.Password = Environment.GetEnvironmentVariable(SMTP_PASSWORD_ENV_VAR_NAME);
 
             this.serviceProvider = serviceProvider;
+            _hostEnvironment = hostEnvironment;
         }
 
         void IEmailService.SendEmail(Message message, int maxRetries)
@@ -37,12 +40,12 @@ namespace Caniactivity.Backend.Services
             {
                 var emailMessage = CreateEmailMessage(message);
 
-                var context = scope.ServiceProvider.GetService<CaniActivityContext>();
+                var context = scope.ServiceProvider.GetRequiredService<CaniActivityContext>();
                 var outboxEntity = new EmailOutbox()
                 {
                     To = string.Concat(message.To.Select(w => w.Address)),
                     Subject = message.Subject,
-                    Body = message.Content,
+                    Body = emailMessage.HtmlBody,
                     IsProcessed = false
                 };
                 context.Outbox.Add(outboxEntity);
@@ -53,8 +56,8 @@ namespace Caniactivity.Backend.Services
                 {
                     try
                     {
-                        Send(emailMessage);
-                        outboxEntity.IsProcessed = true;
+                        //Send(emailMessage);
+                        outboxEntity.IsProcessed = false;
                         context.SaveChanges();
                         break;
                     }
@@ -74,10 +77,13 @@ namespace Caniactivity.Backend.Services
         {
             using (var scope = serviceProvider.CreateScope())
             {
-                var emailMessage = CreateEmailMessage(new Message(
-                                    mailToSend.To.Split('|'),
-                                    mailToSend.Subject,
-                                    mailToSend.Body));
+                var builder = new BodyBuilder();
+                builder.HtmlBody = mailToSend.Body;
+                var emailMessage = CreateRawMessage(
+                    mailToSend.To.Split('|').Select(w => new MailboxAddress(w, w)),
+                    mailToSend.Subject,
+                    builder.ToMessageBody()
+                );
 
                 int attempts = 0;
                 while (attempts < maxRetries)
@@ -101,11 +107,30 @@ namespace Caniactivity.Backend.Services
 
         private MimeMessage CreateEmailMessage(Message message)
         {
+            var pathToFile = _hostEnvironment.ContentRootPath
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "Templates"
+                            + Path.DirectorySeparatorChar.ToString()
+                            + "Emails"
+                            + Path.DirectorySeparatorChar.ToString()
+                            + message.Template;
+            var builder = new BodyBuilder();
+            using (StreamReader SourceReader = System.IO.File.OpenText(pathToFile))
+            {
+                builder.HtmlBody = SourceReader.ReadToEnd();
+            }
+            builder.HtmlBody = string.Format(builder.HtmlBody, message.Args);
+
+            return CreateRawMessage(message.To, message.Subject, builder.ToMessageBody());
+        }
+
+        private MimeMessage CreateRawMessage(IEnumerable<MailboxAddress> addresses, string subject, MimeEntity body)
+        {
             var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress("email", _emailConfig.From));
-            emailMessage.To.AddRange(message.To);
-            emailMessage.Subject = message.Subject;
-            emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text) { Text = message.Content };
+            emailMessage.From.Add(new MailboxAddress(_emailConfig.From, _emailConfig.From));
+            emailMessage.To.AddRange(addresses);
+            emailMessage.Subject = subject;
+            emailMessage.Body = body;
             return emailMessage;
         }
 
@@ -136,24 +161,48 @@ namespace Caniactivity.Backend.Services
 
     public class EmailConfiguration
     {
-        public string From { get; set; } = "";
+        public string? From { get; set; } = "";
         public string SmtpServer { get; set; } = "";
         public int Port { get; set; }
-        public string UserName { get; set; } = "";
-        public string Password { get; set; } = "";
+        public string? UserName { get; set; } = "";
+        public string? Password { get; set; } = "";
     }
 
-    public class Message
+    public record Message
     {
         public List<MailboxAddress> To { get; set; }
-        public string Subject { get; set; }
-        public string Content { get; set; }
-        public Message(IEnumerable<string> to, string subject, string content)
+        public string Subject { get; }
+        //public BodyBuilder Content { get; set; }
+        public string[] Args { get; }
+        public string Template { get; }
+
+        public static Message AppointmentCreated(IEnumerable<string> to, string subject, params string[] args)
+        {
+            return new Message(to, subject, "AppointmentCreated.html", args);
+        }
+
+        public static Message AppointmentValidated(IEnumerable<string> to, string subject, params string[] args)
+        {
+            return new Message(to, subject, "AppointmentValidated.html", args);
+        }
+
+        public static Message AppointmentModified(IEnumerable<string> to, string subject, params string[] args)
+        {
+            return new Message(to, subject, "AppointmentModified.html", args);
+        }
+
+        public static Message AppointmentDeleted(IEnumerable<string> to, string subject, params string[] args)
+        {
+            return new Message(to, subject, "AppointmentDeleted.html", args);
+        }
+
+        internal Message(IEnumerable<string> to, string subject, string template, string[] args)
         {
             To = new List<MailboxAddress>();
             To.AddRange(to.Select(x => new MailboxAddress(x, x)));
             Subject = subject;
-            Content = content;
+            Args = args;
+            Template = template;
         }
     }
 }

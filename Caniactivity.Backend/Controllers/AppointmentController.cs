@@ -7,10 +7,8 @@ using DevExtreme.AspNet.Data;
 using DevExtreme.AspNet.Data.ResponseModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Primitives;
+using MimeKit;
 using Newtonsoft.Json;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
 
 namespace Caniactivity.Controllers
@@ -90,14 +88,20 @@ namespace Caniactivity.Controllers
             _repository.Save();
 
             DateTime start = DateTime.Parse(newAppointment.StartDate);
-            //this._emailService.SendEmail(new Message(
-            //    new List<string>() { registeredUser.Email },
-            //    "Demande de rendez-vous crée",
-            //    $"Votre demande pour le {start:D} à {start:t} a été crée"), 3);
-            //this._emailService.SendEmail(new Message(
-            //    new List<string>() { RegisteredUser.ADMINISTRATOR_MAIL },
-            //    "Demande de rendez-vous crée",
-            //    $"Une demande pour le {start:D} à {start:t} a été crée"), 3);
+            Message messageToUser = Message.AppointmentCreated(
+                    new List<string>() { registeredUser.Email },
+                        "Demande de rendez-vous crée",
+                        "Demande de rendez-vous crée",
+                        String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now),
+                        registeredUser.LastName + " " + registeredUser.FirstName,
+                        $"{start:D} à {start:t}",
+                        String.Join(',', newAppointment.Dogs.Select(w => w.Name))
+                    );
+            var messageToAdmin = 
+                messageToUser with { To = new List<MailboxAddress>() { new MailboxAddress(RegisteredUser.ADMINISTRATOR_MAIL, RegisteredUser.ADMINISTRATOR_MAIL) } };
+
+            this._emailService.SendEmail(messageToUser, 3);
+            this._emailService.SendEmail(messageToAdmin, 3);
 
             return Ok(_mapper.Map<Appointment>(newAppointment));
         }
@@ -122,7 +126,7 @@ namespace Caniactivity.Controllers
             // appoitment is validated
             var isValidated = appointment.Status == AppointmentStatus.Approved;
             // appointment wasn't created by handler
-            var isHandler = appointment.RegisteredBy.Id == registeredUser.Id;
+            var isHandler = appointment.RegisteredBy != null && appointment.RegisteredBy.Id == registeredUser.Id;
             var isAdmin = User.IsInRole(UserRoles.Admin);
 
             var canUpdate = isAdmin || (isHandler && !hasOtherHandlers && !isValidated);
@@ -163,6 +167,42 @@ namespace Caniactivity.Controllers
             _repository.Update(appointment);
             _repository.Save();
 
+            DateTime start = DateTime.Parse(appointment.StartDate);
+            if (appointment.Status == AppointmentStatus.Approved)
+            {
+                Message messageToUser = Message.AppointmentValidated(
+                new List<string>() { registeredUser.Email },
+                    "Votre demande a été validée",
+                    "Validation de rendez-vous",
+                    String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now),
+                    registeredUser.LastName + " " + registeredUser.FirstName,
+                    $"{start:D} à {start:t}",
+                    String.Join(',', appointment.Dogs.Select(w => w.Name))
+                );
+                var messageToAdmin =
+                    messageToUser with { To = new List<MailboxAddress>() { new MailboxAddress(RegisteredUser.ADMINISTRATOR_MAIL, RegisteredUser.ADMINISTRATOR_MAIL) } };
+
+                this._emailService.SendEmail(messageToUser, 3);
+                this._emailService.SendEmail(messageToAdmin, 3);
+            }
+            else
+            {
+                Message messageToUser = Message.AppointmentModified(
+                new List<string>() { registeredUser.Email },
+                    "Votre demande a été modifiée",
+                    "Demande de modification de rendez-vous",
+                    String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now),
+                    registeredUser.LastName + " " + registeredUser.FirstName,
+                    $"{start:D} à {start:t}",
+                    String.Join(',', appointment.Dogs.Select(w => w.Name))
+                );
+                var messageToAdmin =
+                    messageToUser with { To = new List<MailboxAddress>() { new MailboxAddress(RegisteredUser.ADMINISTRATOR_MAIL, RegisteredUser.ADMINISTRATOR_MAIL) } };
+
+                this._emailService.SendEmail(messageToUser, 3);
+                this._emailService.SendEmail(messageToAdmin, 3);
+            }
+
             return Ok(_mapper.Map<Appointment>(appointment));
         }
 
@@ -170,12 +210,33 @@ namespace Caniactivity.Controllers
         [Authorize]
         public async Task<ObjectResult> Delete()
         {
+            string userName = User.Claims.Where(w => w.Type == ClaimTypes.Name).First().Value;
+            RegisteredUser registeredUser = _userRepository.GetByEmail(userName);
+
             IFormCollection form = await Request.ReadFormAsync();
 
             var key = Guid.Parse(form["key"]);
+            var appointment = _repository.GetById(key);
 
             _repository.Delete(key);
             _repository.Save();
+
+
+            DateTime start = DateTime.Parse(appointment.StartDate);
+            Message messageToUser = Message.AppointmentDeleted(
+            new List<string>() { registeredUser.Email },
+                "Votre demande a été annulée",
+                "Désolé, votre demande de rendez-vous a été annulée",
+                String.Format("{0:dddd, d MMMM yyyy}", DateTime.Now),
+                registeredUser.LastName + " " + registeredUser.FirstName,
+                $"{start:D} à {start:t}",
+                String.Join(',', appointment.Dogs.Select(w => w.Name))
+            );
+            var messageToAdmin =
+                messageToUser with { To = new List<MailboxAddress>() { new MailboxAddress(RegisteredUser.ADMINISTRATOR_MAIL, RegisteredUser.ADMINISTRATOR_MAIL) } };
+
+            this._emailService.SendEmail(messageToUser, 3);
+            this._emailService.SendEmail(messageToAdmin, 3);
 
             return Ok(key);
         }

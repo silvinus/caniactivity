@@ -19,6 +19,14 @@ export const navigation = [
       {
         text: 'Tarifs',
         path: '/pages/tarifs'
+      },
+      {
+        text: 'Partners',
+        path: '/pages/partners',
+      },
+      {
+        text: 'Photos',
+        path: '/pages/photos',
       }
     ]
   },
@@ -39,6 +47,10 @@ export const navigation = [
         text: 'Users',
         path: '/pages/users'
       },
+      {
+        text: 'Files',
+        path: '/pages/files'
+      }
       //{
       //  text: 'Scheduler Admin',
       //  path: '/pages/scheduler-admin'

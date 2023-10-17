@@ -5,6 +5,7 @@ using Caniactivity.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
@@ -38,6 +39,9 @@ namespace Caniactivity.Controllers
 
             if (user == null || !await _userManager.CheckPasswordAsync(user, credential.Password))
                 return Unauthorized(new AuthResponseDto { ErrorMessage = "Invalid Authentication" });
+
+            if (user.Status != RegisteredUserStatus.Approved)
+                return BadRequest("Votre compte n'est pas encore validé");
 
             var token = await _jwtHandler.GenerateToken(user);
             string refreshToken = _jwtHandler.GenerateRefreshToken();
@@ -144,20 +148,26 @@ namespace Caniactivity.Controllers
         [HttpPost("Reconnect")]
         public async Task<IActionResult> ReconnectToken([FromBody] UnvalidatedTokenDto reconnectToken)
         {
-            var claim = _jwtHandler.ValidateToken(reconnectToken.Credential);
-            var user = await _userManager.FindByEmailAsync(claim.Claims.First(claim => claim.Type == ClaimTypes.Name).Value);
-            return Ok(new AuthResponseDto { 
-                IsAuthSuccessful = true, 
-                Token = reconnectToken.Credential, 
-                User = new UserDto
+            try
+            {
+                var claim = _jwtHandler.ValidateToken(reconnectToken.Credential);
+                var user = await _userManager.FindByEmailAsync(claim.Claims.First(claim => claim.Type == ClaimTypes.Name).Value);
+                return Ok(new AuthResponseDto
                 {
-                    Id = user.Id,
-                    Email = user.Email, 
-                    FirstName = user.FirstName, 
-                    LastName = user.LastName,
-                    AvatarUrl = user.AvatarUrl
-                } }
-            );
+                    IsAuthSuccessful = true,
+                    Token = reconnectToken.Credential,
+                    User = new UserDto
+                    {
+                        Id = user.Id,
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        AvatarUrl = user.AvatarUrl
+                    }
+                }
+                );
+            }
+            catch (SecurityTokenExpiredException) { return Unauthorized(); }
         }
 
         [HttpPost("refresh")]

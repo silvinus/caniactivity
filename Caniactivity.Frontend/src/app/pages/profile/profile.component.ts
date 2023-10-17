@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { AppInfoService, AuthService, IUser } from '../../shared/services';
 import * as AspNetData from 'devextreme-aspnet-data-nojquery';
 import { environment } from '../../../environments/environment';
+import { UserService } from '../../shared/services/user.service';
 
 @Component({
   selector: 'profile-view',
@@ -11,7 +12,7 @@ import { environment } from '../../../environments/environment';
 
 export class ProfileComponent implements OnInit {
   dataSource: any;
-  @Input() user: IUser | null = { email: '', id: '' };
+  @Input() user: any | null = { email: '', id: '' };
   nameEditorOptions: Object = { disabled: true };
   statusEditorOptions: any = null;
   providerEditorOptions: any = null;
@@ -23,6 +24,22 @@ export class ProfileComponent implements OnInit {
     text: 'Sauvegarder',
     type: 'success',
     useSubmitBehavior: true,
+    onClick: async () => {
+      await this.userService.updateUser(this.user!.id, {
+        firstName: this.user.firstName,
+        lastName: this.user.lastName,
+        phone: this.user.phone
+      });
+    }
+  };
+
+  buttonOptionsDelete: any = {
+    text: 'Supprimer',
+    type: 'danger',
+    useSubmitBehavior: true,
+    onClick: async () => {
+      await this.userService.deleteUser(this.user!.id);
+    }
   };
 
   async ngOnInit() {
@@ -50,7 +67,7 @@ export class ProfileComponent implements OnInit {
     this.dogEditorOptions = { disabled: !this.isAdmin };
   }
 
-  constructor(private authService: AuthService, private infoService: AppInfoService) {
+  constructor(private authService: AuthService, private infoService: AppInfoService, private userService: UserService) {
     this.dogStatuses = infoService.dogStatuses;
   }
 }

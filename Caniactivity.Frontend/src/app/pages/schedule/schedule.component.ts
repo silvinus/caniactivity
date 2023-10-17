@@ -280,9 +280,9 @@ export class ScheduleComponent {
   hasCoffeeCupIcon(date: Date) {
     const hours = date.getHours();
     const minutes = date.getMinutes();
-    const dinnerTime = { from: 12, to: 13 }; // this.dataService.getDinnerTime();
+    const dinnerTime = { from: 12, to: 14 }; // this.dataService.getDinnerTime();
 
-    return hours === dinnerTime.from && minutes === 0;
+    return hours >= dinnerTime.from && hours < dinnerTime.to && minutes === 0;
   }
 
   isMonthView() {

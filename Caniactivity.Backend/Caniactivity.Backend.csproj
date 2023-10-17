@@ -34,6 +34,7 @@
     <PackageReference Include="Google.Apis.Auth" Version="1.61.0" />
     <!--<PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.9" />-->
     <PackageReference Include="Microsoft.AspNetCore.ApiAuthorization.IdentityServer" Version="7.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="7.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.9" />
@@ -54,6 +55,10 @@
     <ProjectReference Include="..\Caniactivity.Sqlite\Caniactivity.Sqlite.csproj" />
     <ProjectReference Include="..\Caniactivity.Postgres\Caniactivity.Postgres.csproj" />
     <ProjectReference Include="..\Caniactivity.Mysql\Caniactivity.Mysql.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Photos\" />
   </ItemGroup>
 
 </Project>

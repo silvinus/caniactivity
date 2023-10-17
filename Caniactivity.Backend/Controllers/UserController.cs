@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Identity;
 
 namespace Caniactivity.Controllers
 {
@@ -39,8 +40,7 @@ namespace Caniactivity.Controllers
         public LoadResult Get([ModelBinder(typeof(DataSourceLoadOptionsHttpBinder))] DataSourceLoadOptions loadOptions)
         {
             return
-                DataSourceLoader.Load(_repository.GetAll(),
-                loadOptions);
+                DataSourceLoader.Load(_repository.GetAll().Select(user => _mapper.Map<UserResponse>(user)), loadOptions);
         }
 
         [HttpPut(Name = "UpdateUser")]
@@ -60,7 +60,7 @@ namespace Caniactivity.Controllers
             _repository.Update(user);
             _repository.Save();
 
-            return Ok(_mapper.Map<RegisteredUser>(user));
+            return Ok(_mapper.Map<UserResponse>(user));
         }
 
         [HttpDelete(Name = "DeleteUser")]

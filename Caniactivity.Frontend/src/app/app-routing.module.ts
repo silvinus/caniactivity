@@ -4,7 +4,7 @@ import { LoginFormComponent, ResetPasswordFormComponent, CreateAccountFormCompon
 import { AuthGuardService, JwtInterceptor } from './shared/services';
 import { HomeComponent } from './pages/home/home.component';
 import { ProfileComponent } from './pages/profile/profile.component';
-import { DxBoxModule, DxButtonModule, DxDataGridModule, DxFormModule, DxSchedulerModule, DxTemplateModule } from 'devextreme-angular';
+import { DxAccordionModule, DxBoxModule, DxButtonModule, DxDataGridModule, DxFileManagerModule, DxFormModule, DxPopupModule, DxSchedulerModule, DxTemplateModule } from 'devextreme-angular';
 import { EnvironmentComponent } from './pages/environment/environment.component';
 import { ActivitiesComponent } from './pages/activities/activities.component';
 import { ScheduleComponent } from './pages/schedule/schedule.component';
@@ -13,8 +13,38 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { UsersComponent } from './pages/users/users.component';
 import { SchedulerAdminComponent } from './pages/scheduler-admin/scheduler-admin.component';
 import { TarifsComponent } from './pages/tarifs/tarifs.component';
+import { CguComponent } from './pages/cgu/cgu.component';
+import { PrivacyComponent } from './pages/privacy/privacy.component';
+import { PartnersComponent } from './pages/partners/partners.component';
+import { PhotosComponent } from './pages/photos/photos.component';
+import { FilesComponent } from './pages/files/files.component';
 
 const routes: Routes = [
+  {
+    path: 'pages/files',
+    component: FilesComponent,
+    canActivate: [ AuthGuardService ]
+  },
+  {
+    path: 'pages/photos',
+    component: PhotosComponent,
+    canActivate: [ AuthGuardService ]
+  },
+  {
+    path: 'pages/partners',
+    component: PartnersComponent,
+    canActivate: [ AuthGuardService ]
+  },
+  {
+    path: 'pages/privacy',
+    component: PrivacyComponent,
+    canActivate: [ AuthGuardService ]
+  },
+  {
+    path: 'pages/cgu',
+    component: CguComponent,
+    canActivate: [ AuthGuardService ]
+  },
   {
     path: 'pages/tarifs',
     component: TarifsComponent,
@@ -90,7 +120,10 @@ const routes: Routes = [
     DxButtonModule,
     BrowserModule,
     DxSchedulerModule,
-    DxTemplateModule
+    DxTemplateModule,
+    DxAccordionModule,
+    DxFileManagerModule,
+    DxPopupModule
   ],
   providers: [
     AuthGuardService,
@@ -104,7 +137,12 @@ const routes: Routes = [
     ScheduleComponent,
     UsersComponent,
     SchedulerAdminComponent,
-    TarifsComponent
+    TarifsComponent,
+    CguComponent,
+    PrivacyComponent,
+    PartnersComponent,
+    PhotosComponent,
+    FilesComponent
   ]
 })
 export class AppRoutingModule { }

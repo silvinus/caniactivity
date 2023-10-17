@@ -1,0 +1,28 @@
+<h2 class="content-block">Gestion des photos</h2>
+<div class="content-block">
+    <dx-file-manager id="fileManager"
+                     [fileSystemProvider]="remoteProvider"
+                     height="450"
+                     (onSelectedFileOpened)="displayImagePopup($event)">
+        <dxo-item-view mode="thumbnails"> </dxo-item-view>
+        <dxo-permissions [create]="false"
+                         [copy]="false"
+                         [move]="false"
+                         [delete]="true"
+                         [rename]="true"
+                         [upload]="true"
+                         [download]="true">
+        </dxo-permissions>
+    </dx-file-manager>
+
+    <dx-popup id="photo-popup"
+              maxHeight="600"
+              [hideOnOutsideClick]="true"
+              [(title)]="imageItemToDisplay.name"
+              [(visible)]="popupVisible">
+        <div *dxTemplate="let data of 'content'" class="photo-popup-content">
+            <img src="{{ imageItemToDisplay }}"
+                 class="photo-popup-image" />
+        </div>
+    </dx-popup>
+</div>

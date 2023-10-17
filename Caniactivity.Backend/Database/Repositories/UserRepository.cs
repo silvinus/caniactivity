@@ -1,4 +1,5 @@
 ﻿using Caniactivity.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using static Duende.IdentityServer.Models.IdentityResources;
 
@@ -35,7 +36,11 @@ namespace Caniactivity.Backend.Database.Repositories
 
         public RegisteredUser GetByEmail(string email) => activityContext.RegisteredUsers.Where(w => w.Email == email).First();
 
-        public RegisteredUser GetById(string userId) => activityContext.RegisteredUsers.Where(w => w.Id == userId).First();
+        public RegisteredUser GetById(string userId) => 
+            activityContext.RegisteredUsers
+                .Include(w => w.Dogs)
+                .Include(w => w.Appointments)
+                .Where(w => w.Id == userId).First();
 
         public void Save()
         {

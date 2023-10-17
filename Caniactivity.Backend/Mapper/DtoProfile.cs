@@ -29,13 +29,15 @@ namespace Caniactivity.Backend.Mapper
                 .ForMember(u => u.Id, opt => opt.MapFrom(x => x.Id))
                 .ForMember(u => u.StartDate, opt => opt.MapFrom(x => x.StartDate))
                 .ForMember(u => u.EndDate, opt => opt.MapFrom(x => x.EndDate))
-                .ForMember(u => u.RegisteredBy, opt => opt.MapFrom(x => new RegisteredUser()
-                {
-                    FirstName = x.RegisteredBy.FirstName,
-                    LastName = x.RegisteredBy.LastName,
-                    Id = x.RegisteredBy.Id,
-                    Email = x.RegisteredBy.Email
-                }))
+                .ForMember(u => u.RegisteredBy, opt => opt.MapFrom(x => 
+                    new RegisteredUser()
+                    {
+                        FirstName = (x.RegisteredBy != null) ? x.RegisteredBy.FirstName : "",
+                        LastName = (x.RegisteredBy != null) ? x.RegisteredBy.LastName: "",
+                        Id = (x.RegisteredBy != null) ? x.RegisteredBy.Id: "",
+                        Email = (x.RegisteredBy != null) ? x.RegisteredBy.Email : ""
+                    }
+                ))
                 .ForMember(u => u.Dogs, opt => opt.MapFrom(w => w.Dogs.Select(x => new Dog()
                 {
                     Breed = x.Breed,

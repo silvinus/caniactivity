@@ -104,6 +104,7 @@ public class RegisteredUser: IdentityUser
     public SSOProvider Provider { get; set; }
     public RegisteredUserStatus Status { get; set; }
     public ICollection<Dog> Dogs { get; set; } = new List<Dog>();
+    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     public string? RefreshToken { get; set; }
     [IsUtc]
     public DateTime RefreshTokenExpiryTime { get; set; }

@@ -2,9 +2,43 @@
   <app-side-nav-outer-toolbar title="{{appInfo.title}}">
     <router-outlet></router-outlet>
     <app-footer>
-      Copyright © 2011-{{appInfo.currentYear}} {{appInfo.title}} Inc.
-      <br/>
-      All trademarks or registered trademarks are property of their respective owners.
+        <div class="flex-container">
+            <div class="flex-child">
+                <div class="flex-label">A PROPOS DE CANIACTIVITY</div>
+
+                <div>
+                    {{appInfo.title}} administré par Aline BON.
+                    <br />
+                    <b>Ouverture</b>: Du lundi au samedi 9h-12h, 14h-18h. Fermé le dimanche<br />
+                    <b>Société gérée par Aline BON</b><br />
+                    <b>Téléphone:</b> +33xxxxxxxxx<br />
+                    <b>Email: </b><a href="mailto:caniactivity@gmail.com" style="color:#03a9f4; text-decoration:none;">caniactivity@gmail.com</a>
+                </div>
+            </div>
+            <div class="flex-child">
+                <div class="flex-label">INFORMATIONS LEGALES</div>
+                <div>
+                    <a routerLink='/pages/cgu'>Conditions générales d'utilisation</a>
+                    <br />
+                    <a routerLink='/pages/privacy'>Vie privée</a>
+                </div>
+            </div>
+            <div class="flex-child">
+                <div class="flex-label">Suivez nous sur</div>
+                <div>
+                    <span style="margin:10px">
+                        <a href="https://instagram.com" title="instagram">
+                            <img src="./assets/Templates/img/instagram.png" width="24" height="24">
+                        </a>
+                    </span>
+                    <span style="margin:10px">
+                        <a href="https://facebook.com" title="Facebook">
+                            <img src="./assets/Templates/img/facebook.png" width="24" height="24">
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </div>
     </app-footer>
   </app-side-nav-outer-toolbar>
 </ng-container>
