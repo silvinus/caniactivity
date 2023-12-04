@@ -1,9 +1,8 @@
 ﻿using Caniactivity.Backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Text;
 using System.Text.Json;
 
 namespace Caniactivity.Backend.Controllers
@@ -21,11 +20,12 @@ namespace Caniactivity.Backend.Controllers
 
         string PhotosDirectoryPath
         {
-            get { return _hostEnvironment.ContentRootPath + "\\Photos"; }
+            get { return Path.Combine(_hostEnvironment.ContentRootPath, "Photos"); }
         }
 
         [HttpPost(Name = "Post- FileManagementApi")]
         [DisableFormValueModelBinding]
+        [Authorize]
         public async Task<FilesResponse> FileSystemPost()
         {
             try
@@ -106,6 +106,7 @@ namespace Caniactivity.Backend.Controllers
         }
 
         [HttpGet(Name = "Get-FileManagementApi")]
+        //[Authorize]
         public async Task<FilesResponse> FileSystemGet(string command, string arguments)
         {
             if (command == "GetDirContents")
@@ -154,7 +155,8 @@ namespace Caniactivity.Backend.Controllers
             var fileSection = section.AsFileSection();
 
             var filePath = Path.Combine(PhotosDirectoryPath, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 1024);
+
+            using var stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.None, 1024);
             await fileSection.FileStream.CopyToAsync(stream);
 
             return fileSection.FileStream.Length;

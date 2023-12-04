@@ -1,4 +1,17 @@
 <h2 class="content-block">Photos</h2>
 <div class="content-block">
-    <div class="dx-card responsive-paddings">Put your content here</div>
+    <dx-tile-view #tileView
+                  [height]="620"
+                  [baseItemHeight]="120"
+                  [baseItemWidth]="185"
+                  width="100%"
+                  [itemMargin]="10"
+                  direction="vertical">
+        <dxi-item *ngFor="let photo of photos"
+                  [widthRatio]="photo.widthRatio"
+                  [heightRatio]="photo.heightRatio">
+            <div class="image"
+                 [style.background-image]="'url(' + displayImage(photo) + ')'"></div>
+        </dxi-item>
+    </dx-tile-view>
 </div>

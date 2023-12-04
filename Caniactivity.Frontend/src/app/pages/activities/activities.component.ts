@@ -5,11 +5,13 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: './activities.component.html',
   styleUrls: ['./activities.component.scss']
 })
-export class ActivitiesComponent implements OnInit {
+export class ActivitiesComponent {
 
   constructor() { }
 
-  ngOnInit(): void {
+  screen: Function = (width: any) => {
+    return (width < 1200) ? 'sm' : 'lg';
   }
+
 
 }

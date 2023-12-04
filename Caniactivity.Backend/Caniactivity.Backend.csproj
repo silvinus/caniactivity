@@ -37,6 +37,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="7.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.9" />
     <PackageReference Include="MySql.EntityFrameworkCore" Version="7.0.5" />
     <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
@@ -56,6 +57,18 @@
     <ProjectReference Include="..\Caniactivity.Postgres\Caniactivity.Postgres.csproj" />
     <ProjectReference Include="..\Caniactivity.Mysql\Caniactivity.Mysql.csproj" />
   </ItemGroup>
+
+  <!--<Target Name="PublishAngular" AfterTargets="ComputeFilesToPublish">
+    <Exec Command="npm install" WorkingDirectory="$(FrontendRoot)" />
+    <Exec Command="npm run build --> <!--prod" WorkingDirectory="$(FrontendRoot)" />
+    <ItemGroup>
+      <DistFiles Include="wwwroot\**" />
+      <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>%(DistFiles.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>-->
 
   <ItemGroup>
     <Folder Include="Photos\" />

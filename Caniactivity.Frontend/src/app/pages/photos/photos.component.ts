@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { environment } from '../../../environments/environment';
+import { File, FileService } from '../../shared/services/files.service';
 
 @Component({
   selector: 'app-photos',
@@ -6,10 +8,30 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./photos.component.scss']
 })
 export class PhotosComponent implements OnInit {
+  photos: File[] = []
 
-  constructor() { }
+  constructor(private filesService: FileService) {
 
-  ngOnInit(): void {
+  }
+
+  async ngOnInit() {
+    this.filesService.getFiles()
+      .then(data => {
+        this.photos = data.map(w => {
+          w.widthRatio = this.getRandomArbitrary(1, 4);
+          w.heightRatio = w.widthRatio;
+
+          return w;
+        });
+      });
+  }
+
+  getRandomArbitrary(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
+  }
+
+  displayImage(e: any) {
+    return `${environment.apiUrl}${e.key}`.replaceAll('\\', '/');
   }
 
 }

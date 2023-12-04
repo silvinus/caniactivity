@@ -325,7 +325,7 @@ export class AuthGuardService implements CanActivate {
       'change-password/:recoveryCode'
     ].includes(route.routeConfig?.path || defaultPath);
     const isPublicPage = [
-      'home', 'pages/activities', 'pages/environment', 'pages/tarifs', 'pages/cgu', 'pages/privacy'
+      'home', 'pages/activities', 'pages/environment', 'pages/tarifs', 'pages/cgu', 'pages/privacy', 'pages/photos', 'pages/partners'
     ].includes(route.routeConfig?.path || defaultPath);
 
     if (isLoggedIn && isAuthForm) {

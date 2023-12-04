@@ -1,0 +1,74 @@
+
+@import "../../../themes/generated/variables.base.scss";
+
+.text {
+  font-size: 20px;
+  padding-top: 10px;
+  text-align: center;
+}
+
+.text-price2 {
+  padding-top: 10px;
+  font-size: 20px;
+}
+
+hr.dashed {
+  border-top: 1px dashed #bbb;
+  width: 100%;
+  margin-top: 20px;
+  margin-bottom: 20px
+}
+
+.price {
+  padding-top: 10px;
+  font-size: 15px;
+  color: lighten($base-accent, 30.00);
+}
+
+.text-price {
+  font-size: 20px;
+  padding-top: 10px;
+  text-align: center;
+  color: lighten($base-accent, 30.00);
+}
+
+.text-tarif {
+  font-size: 15px;
+  padding-top: 10px;
+  text-align: center;
+  color: lighten($base-accent, 30.00);
+}
+
+.text-tarif2 {
+  font-size: 15px;
+  padding-top: 10px;
+  text-align: center;
+}
+
+.text-ul {
+  font-size: 15px;
+  padding-top: 10px;
+  display: inline-block;
+  text-align: left;
+}
+
+div.ul-container {
+  text-align: center;
+  width: 100%;
+}
+
+.circle {
+  width: 150px;
+  height: 150px;
+  line-height: 150px;
+  border-radius: 50%;
+  font-size: 50px;
+  color: #fff;
+  text-align: center;
+  background: lighten($base-accent, 30.00);
+}
+
+.content {
+    align-items: center;
+    margin: 20px;
+}

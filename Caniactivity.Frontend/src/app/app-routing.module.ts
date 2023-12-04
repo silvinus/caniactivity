@@ -4,7 +4,7 @@ import { LoginFormComponent, ResetPasswordFormComponent, CreateAccountFormCompon
 import { AuthGuardService, JwtInterceptor } from './shared/services';
 import { HomeComponent } from './pages/home/home.component';
 import { ProfileComponent } from './pages/profile/profile.component';
-import { DxAccordionModule, DxBoxModule, DxButtonModule, DxDataGridModule, DxFileManagerModule, DxFormModule, DxPopupModule, DxSchedulerModule, DxTemplateModule } from 'devextreme-angular';
+import { DxAccordionModule, DxBoxModule, DxButtonModule, DxDataGridModule, DxFileManagerModule, DxFormModule, DxPopupModule, DxResponsiveBoxModule, DxSchedulerModule, DxTabPanelModule, DxTemplateModule, DxTileViewModule } from 'devextreme-angular';
 import { EnvironmentComponent } from './pages/environment/environment.component';
 import { ActivitiesComponent } from './pages/activities/activities.component';
 import { ScheduleComponent } from './pages/schedule/schedule.component';
@@ -18,6 +18,7 @@ import { PrivacyComponent } from './pages/privacy/privacy.component';
 import { PartnersComponent } from './pages/partners/partners.component';
 import { PhotosComponent } from './pages/photos/photos.component';
 import { FilesComponent } from './pages/files/files.component';
+import { FacebookLoginProvider, SocialAuthServiceConfig, SocialLoginModule } from '@abacritt/angularx-social-login';
 
 const routes: Routes = [
   {
@@ -123,11 +124,31 @@ const routes: Routes = [
     DxTemplateModule,
     DxAccordionModule,
     DxFileManagerModule,
-    DxPopupModule
+    DxPopupModule,
+    DxTileViewModule,
+    DxTabPanelModule,
+    SocialLoginModule,
+    DxResponsiveBoxModule
   ],
   providers: [
     AuthGuardService,
-    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }],
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    {
+      provide: 'SocialAuthServiceConfig',
+      useValue: {
+        autoLogin: false,
+        providers: [
+          {
+            id: FacebookLoginProvider.PROVIDER_ID,
+            provider: new FacebookLoginProvider('1415956495802529')
+          }
+        ],
+        onError: (err) => {
+          console.error(err);
+        }
+      } as SocialAuthServiceConfig,
+    }
+  ],
   exports: [RouterModule],
   declarations: [
     HomeComponent,

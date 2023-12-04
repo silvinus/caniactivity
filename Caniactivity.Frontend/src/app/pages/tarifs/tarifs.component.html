@@ -1,4 +1,173 @@
 <h2 class="content-block">Tarifs</h2>
 <div class="content-block">
-    <div class="dx-card responsive-paddings">Put your content here</div>
+    <div class="dx-card responsive-paddings">
+        <dx-tab-panel id="tabPanel">
+            <dxi-item title="Inscription">
+                <p class="text">Contacter Aline au 06 59 10 43 47 ou sur les réseaux</p>
+                <p class="text-price">10 euros</p>
+                <div class="ul-container">
+                    <ul class="text-ul">
+                        <li>Prévoir carnet de vaccination à jour</li>
+                        <li>Traitement anti parasite à jour</li>
+                        <li>Test de sociabilité au parc sur rendez-vous</li>
+                    </ul>
+                </div>
+            </dxi-item>
+            <dxi-item title="Tarif">
+                <div style="text-align: center">
+                    <hr class="dashed">
+                    <dx-box direction="row" width="100%">
+                        <dxi-item class="text-price2" [ratio]="1"> 30 minutes </dxi-item>
+                        <dxi-item class="price" [ratio]="2"> 8 euros </dxi-item>
+                    </dx-box>
+                    <hr class="dashed">
+                    <dx-box direction="row" width="100%">
+                        <dxi-item class="text-price2" [ratio]="1"> 1 heure </dxi-item>
+                        <dxi-item class="price" [ratio]="2"> 13 euros </dxi-item>
+                    </dx-box>
+                    <hr class="dashed">
+                    <dx-box direction="row" width="100%">
+                        <dxi-item class="text-price2" [ratio]="1"> 2 heures </dxi-item>
+                        <dxi-item class="price" [ratio]="2"> 22 euros </dxi-item>
+                    </dx-box>
+                </div>
+                <p class="text-tarif">(Petit +: Des moments d'échanges, de conseils concernant l'éducation, comportement de votre (ou vos) chien(s) sont inclus si vous le désirez)</p>
+            </dxi-item>
+            <dxi-item title="Famille nombreuse">
+                <dx-responsive-box singleColumnScreen="sm" [(screenByWidth)]="screen">
+                    <dxi-row [ratio]="1"></dxi-row>
+                    <dxi-row [ratio]="1"></dxi-row>
+                    <dxi-row [ratio]="1" screen="sm"></dxi-row>
+                    <dxi-row [ratio]="1" screen="sm"></dxi-row>
+                    <dxi-row [ratio]="1" screen="sm"></dxi-row>
+                    <dxi-row [ratio]="1" screen="sm"></dxi-row>
+
+                    <dxi-col [ratio]="1"></dxi-col>
+                    <dxi-col [ratio]="1" screen="lg"></dxi-col>
+                    <dxi-col [ratio]="1" screen="lg"></dxi-col>
+
+                    <dxi-item>
+                        <dxi-location [row]="0" [col]="0" screen="lg"></dxi-location>
+                        <dxi-location [row]="0"
+                                      [col]="0"
+                                      [colspan]="2"
+                                      screen="sm"></dxi-location>
+                        <div *dxTemplate class="content item">
+                            <div class="circle">
+                                3
+                            </div>
+                        </div>
+                    </dxi-item>
+                    <dxi-item>
+                        <dxi-location [row]="1" [col]="0" screen="lg"></dxi-location>
+                        <dxi-location [row]="1" [col]="0" screen="sm"></dxi-location>
+                        <div *dxTemplate class="left-side-bar item">
+                            <div style="text-align: center">
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 30 minutes </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 8 euros </dxi-item>
+                                </dx-box>
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 1 heure </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 13 euros </dxi-item>
+                                </dx-box>
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 2 heures </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 22 euros </dxi-item>
+                                </dx-box>
+                            </div>
+                        </div>
+                    </dxi-item>
+
+                    <dxi-item>
+                        <dxi-location [row]="0" [col]="1" screen="lg"></dxi-location>
+                        <dxi-location [row]="2"
+                                      [col]="0"
+                                      [colspan]="2"
+                                      screen="sm"></dxi-location>
+                        <div *dxTemplate class="content item">
+                            <div class="circle">
+                                4
+                            </div>
+                        </div>
+                    </dxi-item>
+                    <dxi-item>
+                        <dxi-location [row]="1" [col]="1" screen="lg"></dxi-location>
+                        <dxi-location [row]="3" [col]="0" screen="sm"></dxi-location>
+                        <div *dxTemplate class="left-side-bar item">
+                            <div style="text-align: center">
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 30 minutes </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 8 euros </dxi-item>
+                                </dx-box>
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 1 heure </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 13 euros </dxi-item>
+                                </dx-box>
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 2 heures </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 22 euros </dxi-item>
+                                </dx-box>
+                            </div>
+                        </div>
+                    </dxi-item>
+
+                    <dxi-item>
+                        <dxi-location [row]="0" [col]="2" screen="lg"></dxi-location>
+                        <dxi-location [row]="4"
+                                      [col]="0"
+                                      [colspan]="2"
+                                      screen="sm"></dxi-location>
+                        <div *dxTemplate class="content item">
+                            <div class="circle">
+                                5
+                            </div>
+                        </div>
+                    </dxi-item>
+                    <dxi-item>
+                        <dxi-location [row]="1" [col]="2" screen="lg"></dxi-location>
+                        <dxi-location [row]="5" [col]="0" screen="sm"></dxi-location>
+                        <div *dxTemplate class="left-side-bar item">
+                            <div style="text-align: center">
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 30 minutes </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 8 euros </dxi-item>
+                                </dx-box>
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 1 heure </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 13 euros </dxi-item>
+                                </dx-box>
+                                <dx-box direction="row" width="100%">
+                                    <dxi-item class="text-price2" [ratio]="1"> 2 heures </dxi-item>
+                                    <dxi-item class="price" [ratio]="1"> 22 euros </dxi-item>
+                                </dx-box>
+                            </div>
+                        </div>
+                    </dxi-item>
+
+                </dx-responsive-box>
+            </dxi-item>
+            <dxi-item title="Abonnement">
+                <p class="text">(engagement 24 semaines minimum)</p>
+                <p class="text-price">50 euros (par 4 semaines)</p>
+                <p class="text-tarif2">
+                    Un accès illimité au parc aux horaires d'ouverture<br />
+                    (sous condition que le nombre maximum de chiens ne soit pas atteint aux créneaux horaire)
+                </p>
+            </dxi-item>
+            <dxi-item title="Privatisation du parc">
+                <p class="text">
+                    Vous souhaitez fêter l'anniversaire de votre Loulou en invitant ses copains
+                    congénères à s'éclater avec lui ou profiter tout simplement d'un moment de bonheur entre copains chiens et leurs humains préférés ?!
+                    <br />
+                    <br />
+                    Le parc peut être privatisé pendant 2 heures:
+                </p>
+                <p class="text-price">120 euros</p>
+                <p class="text-tarif2">
+                    (Un maximum de 7 chiens sera autorisé)
+                </p>
+            </dxi-item>
+        </dx-tab-panel>
+    </div>
 </div>

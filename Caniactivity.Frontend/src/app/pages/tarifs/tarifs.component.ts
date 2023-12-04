@@ -11,5 +11,7 @@ export class TarifsComponent implements OnInit {
 
   ngOnInit(): void {
   }
-
+  screen: Function = (width: any) => {
+    return (width < 1200) ? 'sm' : 'lg';
+  }
 }

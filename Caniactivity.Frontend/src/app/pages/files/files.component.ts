@@ -11,8 +11,10 @@ export class FilesComponent implements OnInit {
   allowedFileExtensions: string[] = ['.jpg', '.png', '.jpeg'];
   remoteProvider: RemoteFileSystemProvider = new RemoteFileSystemProvider({
     endpointUrl: `${environment.apiUrl}/api/files`,
-    beforeSubmit: (options) => {
-      console.log(options);
+    beforeAjaxSend(ajaxOptions) {
+      ajaxOptions.headers = {
+        "Authorization": `Bearer ${localStorage.getItem('token')}`
+      };
     }
   });
   imageItemToDisplay: any = {};

@@ -1,5 +1,6 @@
 declare var google: any;
 
+import { FacebookLoginProvider, SocialAuthService } from '@abacritt/angularx-social-login';
 import { CommonModule } from '@angular/common';
 import { AfterViewChecked, AfterViewInit, Component, ElementRef, NgModule, OnInit, ViewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
@@ -21,19 +22,14 @@ export class LoginFormComponent implements AfterViewInit {
   initialized = false;
   formData: any = {};
 
-  constructor(private authService: AuthService, private router: Router) {
-    //const gAccounts: accounts = google.accounts;
-    //gAccounts.id.initialize({
-    //  client_id: '525855556201-51in80imafjci7lkie1e8g671gbtbab0.apps.googleusercontent.com',
-    //  ux_mode: 'popup',
-    //  cancel_on_tap_outside: true,
-    //  callback: (window as any).handleCredentialResponse
-    //});
-    //google.accounts.id.prompt();
+  constructor(private authService: AuthService, private router: Router,
+    private socialAuthService: SocialAuthService) {
     this.initialized = true;
+    this.socialAuthService.authState.subscribe((user) => {
+      console.log(user);
+    });
   }
   ngAfterViewInit(): void {
-    //setTimeout(() => {
     google.accounts.id.renderButton(this.gbutton.nativeElement, {
         size: 'large',
         class: 'g_id_signin',
@@ -43,7 +39,6 @@ export class LoginFormComponent implements AfterViewInit {
         logo_alignement: 'left',
         width: 250,
       });
-    //}, 10);
   }
 
   async onSubmit(e: Event) {
@@ -60,6 +55,10 @@ export class LoginFormComponent implements AfterViewInit {
 
   onCreateAccountClick = () => {
     this.router.navigate(['/create-account']);
+  }
+
+  onFacebookLogin = () => {
+    this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID);
   }
 }
 @NgModule({

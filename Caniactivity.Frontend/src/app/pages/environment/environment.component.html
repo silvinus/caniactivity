@@ -1,17 +1,34 @@
-<h2 class="content-block">L'environment</h2>
+<h2 class="content-block">L'environnement</h2>
 <div class="content-block">
-    <div>
-        <img class="displayed" src="../../../assets/parc1.jpg" />
-    </div>
-    <div class ="dx-card responsive-paddings">
-        <p>
-            Situé dans un petit hameau de Périgneux dans la Loire (42380), le parc offre un cadre paisible pour venir s’évader le temps d’une rencontre, de jeux avec les copains à 4 pattes.
-            <br />
-            Vous trouverez bien sûr de quoi ramasser les « canicacas » et de quoi désaltérer vos chiens au parc.
-            <br />
-            En été, on trouve aussi un coin d’eau afin que les loulous se rafraîchissent, mais aussi parfois  se familiarisent car l’eau n’est pas toujours le meilleur ami du chien!
-            <br />
-            Le parc proposera au fil des mois des agrès/ activités supplémentaires, ne ratez pas ça!
-        </p>
+    <div class="dx-card responsive-paddings">
+        <dx-responsive-box>
+            <dxi-row [ratio]="1"></dxi-row>
+            <dxi-row [ratio]="1"></dxi-row>
+
+            <dxi-col [ratio]="1"></dxi-col>
+
+            <dxi-item>
+                <dxi-location [row]="0" [col]="0"></dxi-location>
+                <div *dxTemplate class="left-side-bar item">
+                    <div style="height: 500px; overflow: hidden">
+                        <img class="displayed" src="../../../assets/home.jpg" />
+                    </div>
+                </div>
+            </dxi-item>
+            <dxi-item>
+                <dxi-location [row]="1" [col]="0"></dxi-location>
+                <div *dxTemplate class="content item">
+                    <P class="text">
+                        Situé dans un petit hameau de Périgneux dans la Loire (42380), le parc offre un cadre paisible pour venir s’évader le temps d’une rencontre, de jeux avec les copains à 4 pattes.
+                        <br />
+                        Vous trouverez bien sûr de quoi ramasser les « canicacas » et de quoi désaltérer vos chiens au parc.
+                        <br />
+                        En été, on trouve aussi un coin d’eau afin que les loulous se rafraîchissent, mais aussi parfois  se familiarisent car l’eau n’est pas toujours le meilleur ami du chien!
+                        <br />
+                        Le parc proposera au fil des mois des agrès/ activités supplémentaires, ne ratez pas ça!
+                    </P>
+                </div>
+            </dxi-item>
+        </dx-responsive-box>
     </div>
 </div>

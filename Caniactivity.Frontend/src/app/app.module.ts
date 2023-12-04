@@ -10,6 +10,7 @@ import { UnauthenticatedContentModule } from './unauthenticated-content';
 import { AppRoutingModule } from './app-routing.module';
 import { UserService } from './shared/services/user.service';
 import { AppointmentService } from './shared/services/appointment.service';
+import { FileService } from './shared/services/files.service';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { AppointmentService } from './shared/services/appointment.service';
     ScreenService,
     AppInfoService,
     UserService,
-    AppointmentService
+    AppointmentService,
+    FileService
     //{ provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }
   ],
   bootstrap: [AppComponent]

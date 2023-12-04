@@ -116,6 +116,12 @@ namespace Caniactivity
 
                 Console.WriteLine("");
                 builder.Services.AddControllers();
+
+                //builder.Services.AddSpaStaticFiles(configuration =>
+                //{
+                //    configuration.RootPath = "wwwroot";
+                //});
+
                 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
                 builder.Services.AddEndpointsApiExplorer();
                 builder.Services.AddSwaggerGen();
@@ -142,6 +148,15 @@ namespace Caniactivity
                     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
                 });
 
+                string photosPath = Path.Combine(builder.Environment.ContentRootPath, "Photos");
+                if (!Directory.Exists(photosPath))
+                    Directory.CreateDirectory(photosPath);
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(photosPath),
+                    RequestPath = "/Photos"
+                });
+
                 // Configure the HTTP request pipeline.
                 if (app.Environment.IsDevelopment())
                 {
@@ -151,8 +166,9 @@ namespace Caniactivity
                 }
                 else
                 {
-                    app.UseDefaultFiles();
-                    //app.UseStaticFiles();
+                    //app.UseDefaultFiles();
+                    //app.UseSpaStaticFiles();
+                    app.UseStaticFiles();
                 }
 
                 if (!app.Environment.IsDevelopment())
@@ -161,18 +177,14 @@ namespace Caniactivity
                 }
                 app.UseCors("corsapp");
 
-                app.UseStaticFiles(new StaticFileOptions
-                {
-                    FileProvider = new PhysicalFileProvider(
-                        Path.Combine(builder.Environment.ContentRootPath, "Photos")),
-                    RequestPath = "/Photos"
-                });
                 app.UseRouting();
 
                 app.UseAuthentication();
                 app.UseAuthorization();
 
                 app.MapControllers();
+
+                app.UseSpa(spa => spa.Options.SourcePath = "wwwroot");
 
                 app.Run();
             }
